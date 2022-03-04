@@ -5,8 +5,8 @@ Command::Command(Sessions& sessions)
 
 }
 
-Command::Command(Network network, Sessions& sessions, const std::string& payload)
-    : network(network), sessions(sessions), payload(payload) {
+Command::Command(Connection connection, Sessions& sessions, const std::string& payload)
+    : connection(connection), sessions(sessions), payload(payload) {
 
 }
 
@@ -14,6 +14,6 @@ void Command::setPayload(const std::string& payload) {
     this->payload = payload;
 }
 
-void Command::setNetwork(Network network) {
-    this->network = network;
+void Command::setConnection(Connection connection) {
+    this->connection = connection;
 }

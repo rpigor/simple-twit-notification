@@ -7,12 +7,12 @@ FollowCommand::FollowCommand(Sessions& sessions)
 
 }
 
-FollowCommand::FollowCommand(Network network, Sessions& sessions, const std::string& payload)
-    : Command(network, sessions, payload) {
+FollowCommand::FollowCommand(Connection connection, Sessions& sessions, const std::string& payload)
+    : Command(connection, sessions, payload) {
 
 }
 
-void FollowCommand::execute() const {
+void FollowCommand::execute() {
     std::string username = this->payload.substr(0, this->payload.find(","));
     std::string auxSession = this->payload.substr(this->payload.find(",") + 1);
     std::string session = auxSession.substr(0, auxSession.find(","));
@@ -20,7 +20,7 @@ void FollowCommand::execute() const {
     std::string userToFollow = auxUserToFollow.substr(0, auxUserToFollow.find(","));
 
     if (!this->sessions.accountExists(username)) {
-        if (sendto(this->network.socket, std::string("perfil nao existe\n").c_str(), std::string("perfil nao existe\n").length(), 0, (struct sockaddr*) &this->network.clientAddr, sizeof(this->network.clientAddr)) == -1) {
+        if (this->connection.sendMessage("perfil nao existe\n") < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -29,7 +29,7 @@ void FollowCommand::execute() const {
     }
 
     if (!this->sessions.accountExists(userToFollow)) {
-        if (sendto(this->network.socket, std::string("perfil para seguir nao existe\n").c_str(), std::string("perfil para seguir nao existe\n").length(), 0, (struct sockaddr*) &this->network.clientAddr, sizeof(this->network.clientAddr)) == -1) {
+        if (this->connection.sendMessage("perfil para seguir nao existe\n") < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -38,7 +38,7 @@ void FollowCommand::execute() const {
     }
 
     if (!this->sessions.hasSession(username, std::stoul(session))) {
-        if (sendto(this->network.socket, std::string("sessao invalida\n").c_str(), std::string("sessao invalida\n").length(), 0, (struct sockaddr*) &this->network.clientAddr, sizeof(this->network.clientAddr)) == -1) {
+        if (this->connection.sendMessage("sessao invalida\n") < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -47,7 +47,7 @@ void FollowCommand::execute() const {
     }
 
     if (userToFollow == username) {
-        if (sendto(this->network.socket, std::string("perfil nao pode seguir a si mesmo\n").c_str(), std::string("perfil nao pode seguir a si mesmo\n").length(), 0, (struct sockaddr*) &this->network.clientAddr, sizeof(this->network.clientAddr)) == -1) {
+        if (this->connection.sendMessage("perfil nao pode seguir a si mesmo\n") < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -72,12 +72,12 @@ void FollowCommand::execute() const {
     }
     std::cout << std::endl;
 
-    if (sendto(this->network.socket, std::string("seguir," + username + "," + session + "," + userToFollow + "\n").c_str(), std::string("seguir," + username + "," + session + "," + userToFollow + "\n").length(), 0, (struct sockaddr*) &this->network.clientAddr, sizeof(this->network.clientAddr)) == -1) {
+    if (this->connection.sendMessage("seguir," + username + "," + session + "," + userToFollow + "\n") < 0) {
         perror("sendto()");
         exit(1);
     }
 }
 
 std::string FollowCommand::name() const {
-    return "Segue usuário";
+    return "Follows user";
 }

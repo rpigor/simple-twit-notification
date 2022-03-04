@@ -1,5 +1,6 @@
 #include "Application.hpp"
 #include "Server.hpp"
+#include "Connection.hpp"
 #include "Account.hpp"
 #include "Sessions.hpp"
 #include "Tweet.hpp"
@@ -11,16 +12,14 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <thread>
 
 void Application::run() {
-	Server server(PORT); // open server and bind to port
-
 	std::vector<Account> contas = { Account("matheus"), Account("gabriel"), Account("pedro"), Account("igor") };
 	std::vector<Tweet> tweets;
 	Sessions sessoes(contas);
 
 	std::map<std::string, Command*> commands;
-
 	SessionCommand sessionCommand(sessoes);
 	FollowCommand followCommand(sessoes);
 	TweetCommand tweetCommand(sessoes, tweets);
@@ -29,22 +28,32 @@ void Application::run() {
 	commands["seguir"] = &followCommand;
 	commands["tweet"] = &tweetCommand;
 
-	int recvLen;
+	Server server(PORT); // open server and bind to port
+	std::vector<std::thread> connThreads;
 
-	// keep listening for data
+	std::cout << "Listening to port " << PORT << "..." << std::endl;
+
 	while (true) {
-		std::cout << "Waiting for data..." << std::endl;
-		
-		std::string buffer = server.recvMessage(); // try to receive some data, this is a blocking call
+		Connection conn = server.acceptClientSocket();
+		std::cout << "Creating new thread to handle request from " << conn.getAddress() << ":" << conn.getPort() << std::endl;
+		connThreads.push_back(std::thread(handleClient, conn, commands));
+	}
 
-		std::cout << "Received request from " << inet_ntoa(server.getClientAddr().sin_addr) << ":" << ntohs(server.getClientAddr().sin_port) << "\n";
+	for (std::thread& t : connThreads) {
+		t.join();
+	}
+}
 
-		std::string commandStr = buffer.substr(0, buffer.find(","));
-		std::string payloadStr = buffer.substr(buffer.find(",") + 1);
+void Application::handleClient(Connection conn, std::map<std::string, Command*> commands) {
+	// loop while not disconnected
+	while (conn.receiveMessage() > 0) {
+		std::string message = conn.getMessage();
+		std::string commandStr = message.substr(0, message.find(","));
+		std::string payloadStr = message.substr(message.find(",") + 1);
 
 		try {
+		    commands.at(commandStr)->setConnection(conn);
             commands.at(commandStr)->setPayload(payloadStr);
-		    commands.at(commandStr)->setNetwork(Network(server.getSocket(), server.getClientAddr()));
 			commands.at(commandStr)->execute();
 		}
 		catch(const std::out_of_range& e) {
@@ -53,4 +62,6 @@ void Application::run() {
 
 		std::cout << std::endl;
 	}
+
+	std::cout << "Deleted thread from client " << conn.getAddress() << ":" << conn.getPort() << std::endl;
 }

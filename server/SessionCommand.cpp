@@ -6,12 +6,12 @@ SessionCommand::SessionCommand(Sessions& sessions)
 
 }
 
-SessionCommand::SessionCommand(Network network, Sessions& sessions, const std::string& payload)
-    : Command(network, sessions, payload) {
+SessionCommand::SessionCommand(Connection connection, Sessions& sessions, const std::string& payload)
+    : Command(connection, sessions, payload) {
 
 }
 
-void SessionCommand::execute() const {
+void SessionCommand::execute() {
     std::string username = this->payload.substr(0, this->payload.find(","));
 
     unsigned long sessionId = this->sessions.createSession(username);
@@ -19,12 +19,9 @@ void SessionCommand::execute() const {
     std::cout << "Session [" << sessionId << "] generated to account @" << username << ".\n";
 
     std::string sessionMsg = "sessao," + std::to_string(sessionId) + "\n";
-    if (sendto(this->network.socket, sessionMsg.c_str(), sessionMsg.length(), 0, (struct sockaddr*) &this->network.clientAddr, sizeof(this->network.clientAddr)) == -1) {
-        perror("sendto()");
-        exit(1);
-    }
+    this->connection.sendMessage(sessionMsg);
 }
 
 std::string SessionCommand::name() const {
-    return "Gera sessão";
+    return "Generates session";
 }
