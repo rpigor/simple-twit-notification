@@ -14,6 +14,8 @@
 #include <map>
 #include <thread>
 
+std::mutex Application::commandMutex;
+
 void Application::run() {
 	std::vector<Account> contas = { Account("matheus"), Account("gabriel"), Account("pedro"), Account("igor") };
 	std::vector<Tweet> tweets;
@@ -35,7 +37,7 @@ void Application::run() {
 
 	while (true) {
 		Connection conn = server.acceptClientSocket();
-		std::cout << "Creating new thread to handle request from " << conn.getAddress() << ":" << conn.getPort() << std::endl;
+		std::cout << "Creating new thread to handle client " << conn.getAddress() << ":" << conn.getPort() << std::endl;
 		connThreads.push_back(std::thread(handleClient, conn, commands));
 	}
 
@@ -51,6 +53,8 @@ void Application::handleClient(Connection conn, std::map<std::string, Command*> 
 		std::string commandStr = message.substr(0, message.find(","));
 		std::string payloadStr = message.substr(message.find(",") + 1);
 
+		std::lock_guard<std::mutex> commandGuard(commandMutex); // synchronize access to resources
+
 		try {
 		    commands.at(commandStr)->setConnection(conn);
             commands.at(commandStr)->setPayload(payloadStr);
@@ -63,5 +67,7 @@ void Application::handleClient(Connection conn, std::map<std::string, Command*> 
 		std::cout << std::endl;
 	}
 
-	std::cout << "Deleted thread from client " << conn.getAddress() << ":" << conn.getPort() << std::endl;
+	conn.closeConnection();
+
+	std::cout << "Finished thread from client " << conn.getAddress() << ":" << conn.getPort() << std::endl;
 }
