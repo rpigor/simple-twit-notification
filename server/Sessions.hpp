@@ -18,8 +18,8 @@ public:
     unsigned long createSession(const std::string&);
     std::vector<Account>& getAccounts() const;
     bool accountExists(const Account&);
-    void deleteSessions(const Account&, unsigned long);
-    void deleteSessions(const std::string&, unsigned long);
+    void deleteSession(const Account&, unsigned long);
+    void deleteSession(const std::string&, unsigned long);
     bool hasSession(const Account&) const;
     bool hasSession(const std::string&) const;
     bool hasSession(const Account&, unsigned long) const;

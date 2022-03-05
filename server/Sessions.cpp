@@ -1,7 +1,9 @@
 #include "Sessions.hpp"
 #include <algorithm>
+#include <limits>
 
-Sessions::Sessions(std::vector<Account>& accounts) : accounts(accounts), sessionCount(0) {
+Sessions::Sessions(std::vector<Account>& accounts)
+    : accounts(accounts), sessionCount(0) {
 
 }
 
@@ -11,12 +13,12 @@ unsigned long Sessions::createSession(const Account& account) {
     }
 
     if (this->sessions.find(account) == this->sessions.end()) {
-        ++this->sessionCount;
+        this->sessionCount = (this->sessionCount + 1) % std::numeric_limits<unsigned long>::max();
         this->sessions[account] = std::make_pair(this->sessionCount, 0);
         return this->sessionCount;
     }
 
-    ++this->sessionCount;
+    this->sessionCount = (this->sessionCount + 1) % std::numeric_limits<unsigned long>::max();
     if (this->sessions.at(account).second < this->sessions.at(account).first) {
         this->sessions[account].second = this->sessionCount;
     }
@@ -33,12 +35,12 @@ unsigned long Sessions::createSession(const std::string& username) {
     }
 
     if (this->sessions.find(username) == this->sessions.end()) {
-        ++this->sessionCount;
+        this->sessionCount = (this->sessionCount + 1) % std::numeric_limits<unsigned long>::max();
         this->sessions[username] = std::make_pair(this->sessionCount, 0);
         return this->sessionCount;
     }
 
-    ++this->sessionCount;
+    this->sessionCount = (this->sessionCount + 1) % std::numeric_limits<unsigned long>::max();
     if (this->sessions.at(username).second < this->sessions.at(username).first) {
         this->sessions[username].second = this->sessionCount;
     }
@@ -57,12 +59,8 @@ bool Sessions::accountExists(const Account& account) {
     return std::find(this->accounts.begin(), this->accounts.end(), account) != this->accounts.end();
 }
 
-void Sessions::deleteSessions(const Account& account, unsigned long session) { 
-    if (!hasSession(account)) {
-        return;
-    }
-
-    if (this->sessions.at(account).first != session && this->sessions.at(account).second != session) {
+void Sessions::deleteSession(const Account& account, unsigned long session) { 
+    if (!hasSession(account, session)) {
         return;
     }
 
@@ -74,12 +72,8 @@ void Sessions::deleteSessions(const Account& account, unsigned long session) {
     }
 }
 
-void Sessions::deleteSessions(const std::string& username, unsigned long session) { 
-    if (!hasSession(username)) {
-        return;
-    }
-
-    if (this->sessions.at(username).first != session && this->sessions.at(username).second != session) {
+void Sessions::deleteSession(const std::string& username, unsigned long session) { 
+    if (!hasSession(username, session)) {
         return;
     }
 
@@ -100,6 +94,10 @@ bool Sessions::hasSession(const std::string& username) const {
 }
 
 bool Sessions::hasSession(const Account& account, unsigned long session) const {
+    if (session == 0) {
+        return false;
+    }
+
     if (!hasSession(account)) {
         return false;
     }
@@ -108,6 +106,10 @@ bool Sessions::hasSession(const Account& account, unsigned long session) const {
 }
 
 bool Sessions::hasSession(const std::string& username, unsigned long session) const {
+    if (session == 0) {
+        return false;
+    }
+
     if (!hasSession(username)) {
         return false;
     }

@@ -11,7 +11,7 @@ Connection::Connection(int connSocket, struct sockaddr_in connAddr)
 }
 
 int Connection::sendMessage(const std::string& message) {
-    return send(this->connSocket, message.c_str(), sizeof(message.c_str()), 0);
+    return send(this->connSocket, message.c_str(), message.length(), 0);
 }
 
 int Connection::receiveMessage() {
