@@ -18,7 +18,7 @@ void SessionCommand::execute() {
 
     std::cout << "Session [" << sessionId << "] generated to account @" << username << ".\n";
 
-    std::string sessionMsg = "sessao," + std::to_string(sessionId) + "\n";
+    std::string sessionMsg = "sessao," + std::to_string(sessionId) + ",";
     this->connection.sendMessage(sessionMsg);
 }
 

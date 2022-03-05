@@ -4,8 +4,8 @@
 
 class Application {
 private:
-    static constexpr unsigned short PORT = 8888;
-    
+    static void printCommands();
+
 public:
-    static void run(std::string, std::string, unsigned short);
+    static void run(const std::string&, const std::string&, unsigned short);
 };

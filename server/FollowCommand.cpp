@@ -20,7 +20,7 @@ void FollowCommand::execute() {
     std::string userToFollow = auxUserToFollow.substr(0, auxUserToFollow.find(","));
 
     if (!this->sessions.accountExists(username)) {
-        if (this->connection.sendMessage("perfil nao existe\n") < 0) {
+        if (this->connection.sendMessage("perfil nao existe") < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -29,7 +29,7 @@ void FollowCommand::execute() {
     }
 
     if (!this->sessions.accountExists(userToFollow)) {
-        if (this->connection.sendMessage("perfil para seguir nao existe\n") < 0) {
+        if (this->connection.sendMessage("perfil para seguir nao existe") < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -38,7 +38,7 @@ void FollowCommand::execute() {
     }
 
     if (!this->sessions.hasSession(username, std::stoul(session))) {
-        if (this->connection.sendMessage("sessao invalida\n") < 0) {
+        if (this->connection.sendMessage("sessao invalida") < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -47,7 +47,7 @@ void FollowCommand::execute() {
     }
 
     if (userToFollow == username) {
-        if (this->connection.sendMessage("perfil nao pode seguir a si mesmo\n") < 0) {
+        if (this->connection.sendMessage("perfil nao pode seguir a si mesmo") < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -72,7 +72,7 @@ void FollowCommand::execute() {
     }
     std::cout << std::endl;
 
-    if (this->connection.sendMessage("seguir," + username + "," + session + "," + userToFollow + "\n") < 0) {
+    if (this->connection.sendMessage("seguir," + username + "," + session + "," + userToFollow + ",") < 0) {
         perror("sendto()");
         exit(1);
     }

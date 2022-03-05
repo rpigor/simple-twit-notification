@@ -19,7 +19,7 @@ void TweetCommand::execute() {
     std::string message = auxMessage.substr(0, auxMessage.find(","));
     
     if (!this->sessions.accountExists(username)) {
-        if (this->connection.sendMessage("perfil nao existe\n") < 0) {
+        if (this->connection.sendMessage("perfil nao existe") < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -28,7 +28,7 @@ void TweetCommand::execute() {
     }
 
     if (!this->sessions.hasSession(username, std::stoul(session))) {
-        if (this->connection.sendMessage("sessao invalida\n") < 0) {
+        if (this->connection.sendMessage("sessao invalida") < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -37,7 +37,7 @@ void TweetCommand::execute() {
     }
 
     if (message.length() > 140) {
-        if (this->connection.sendMessage("mensagem excede 140 caracteres\n") < 0) {
+        if (this->connection.sendMessage("mensagem excede 140 caracteres") < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -64,7 +64,7 @@ void TweetCommand::execute() {
     }
     std::cout << std::endl;
 
-    if (this->connection.sendMessage("tweet," + username + "," + session + "," + message + "\n") < 0) {
+    if (this->connection.sendMessage("tweet," + username + "," + session + "," + message + ",") < 0) {
         perror("sendto()");
         exit(1);
     }
