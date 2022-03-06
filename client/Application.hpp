@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Client.hpp"
 #include <string>
 
 class Application {

@@ -3,7 +3,7 @@
 #include <string>
 #include <arpa/inet.h>
 
-class Client{
+class Client {
 private:
     static constexpr int BUFLEN = 512;
 

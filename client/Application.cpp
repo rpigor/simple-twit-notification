@@ -111,6 +111,10 @@ void Application::run(const std::string& profile, const std::string& ip, unsigne
         else if (message == "HELP") {
             printCommands();
         }
+        else if (message == "EXIT") {
+            std::cout << "[INFO] Exiting..." << std::endl;
+            return;
+        }
         else {
             std::cout << "[ERROR] Invalid command." << std::endl;
             std::cout << "Type 'HELP' for a list of commands." << std::endl;
@@ -127,4 +131,5 @@ void Application::printCommands() {
     std::cout << "\t\tFOLLOW <profile>\t\tE.g.: FOLLOW @igor" << std::endl;
     std::cout << "\t\tSEND <message>\t\t\tE.g.: SEND hello world!" << std::endl;
     std::cout << "\t\tHELP" << std::endl;
+    std::cout << "\t\tEXIT" << std::endl;
 }
