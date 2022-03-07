@@ -1,8 +1,9 @@
 #include "Tweet.hpp"
+#include <ctime>
 
 Tweet::Tweet(const Account& account, const std::string& message)
     : account(account), message(message) {
-
+    this->timestamp = std::time(nullptr);
 }
 
 unsigned long Tweet::getUid() const {
@@ -19,4 +20,8 @@ const std::string& Tweet::getMessage() const {
 
 const std::string& Tweet::getDateTime() const {
     return std::ctime(&this->timestamp);
+}
+
+std::intmax_t Tweet::getEpoch() const {
+    return (std::intmax_t) this->timestamp;
 }

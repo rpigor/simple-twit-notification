@@ -14,7 +14,7 @@ SessionCommand::SessionCommand(Connection connection, Sessions& sessions, const 
 void SessionCommand::execute() {
     std::string username = this->payload.substr(0, this->payload.find(","));
 
-    unsigned long sessionId = this->sessions.createSession(username);
+    unsigned long sessionId = this->sessions.createSession(this->connection, username).getSessionId();
 
     std::cout << "Session [" << sessionId << "] generated to account @" << username << ".\n";
 

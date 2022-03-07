@@ -1,13 +1,13 @@
 #include "TweetCommand.hpp"
 #include <iostream>
 
-TweetCommand::TweetCommand(Sessions& sessions, std::vector<Tweet>& tweets)
-    : Command(sessions), tweets(tweets) {
+TweetCommand::TweetCommand(Sessions& sessions, std::vector<Tweet>& tweets, std::map<Account, std::vector<Notification>>& notifications)
+    : Command(sessions), tweets(tweets), notifications(notifications) {
 
 }
 
-TweetCommand::TweetCommand(Connection connection, Sessions& sessions, std::vector<Tweet>& tweets, const std::string& payload)
-    : Command(connection, sessions, payload), tweets(tweets) {
+TweetCommand::TweetCommand(Connection connection, Sessions& sessions, std::vector<Tweet>& tweets, std::map<Account, std::vector<Notification>>& notifications, const std::string& payload)
+    : Command(connection, sessions, payload), tweets(tweets), notifications(notifications) {
 
 }
 
@@ -51,8 +51,14 @@ void TweetCommand::execute() {
             break;
         ++it;
     }
+    Account user = *it;
+    Tweet userTweet(user, message);
+    this->tweets.push_back(userTweet);
 
-    this->tweets.push_back(Tweet(*it, message));
+    // push to notification queue
+    for (const Account& follower : user.getFollowers()) {
+        this->notifications[follower].push_back(Notification(user, userTweet));
+    }
 
     std::cout << "Account @" << username << " just tweeted: \"" << message << "\"." << std::endl;
 

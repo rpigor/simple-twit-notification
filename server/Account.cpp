@@ -26,10 +26,22 @@ const std::vector<Account>& Account::getFollowing() const {
     return this->following;
 }
 
+const std::vector<Account>& Account::getFollowers() const {
+    return this->followers;
+}
+
 void Account::follow(const Account& account) {
     if (std::find(this->following.begin(), this->following.end(), account) != this->following.end()) {
         return;
     }
 
     this->following.push_back(account);
+}
+
+void Account::beFollowedBy(const Account& account) {
+    if (std::find(this->followers.begin(), this->followers.end(), account) != this->followers.end()) {
+        return;
+    }
+
+    this->followers.push_back(account);
 }

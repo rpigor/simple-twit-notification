@@ -17,4 +17,5 @@ public:
     const Account& getAccount() const;
     const std::string& getMessage() const;
     const std::string& getDateTime() const;
+    std::intmax_t getEpoch() const;
 };

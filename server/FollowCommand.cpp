@@ -61,13 +61,26 @@ void FollowCommand::execute() {
             break;
         ++it;
     }
-
     it->follow(userToFollow);
 
     std::cout << "Account @" << username << " just followed account @" << userToFollow << ".\n";
 
     std::cout << "@" << username <<  " is following: ";
     for (const Account& acc : it->getFollowing()) {
+        std::cout << "@" << acc.getUsername() << " ";
+    }
+    std::cout << std::endl;
+
+    it = this->sessions.getAccounts().begin();
+    while (it != this->sessions.getAccounts().end()) {
+        if (it->getUsername() == userToFollow)
+            break;
+        ++it;
+    }
+    it->beFollowedBy(username);
+
+    std::cout << "@" << it->getUsername() <<  " is being followed by: ";
+    for (const Account& acc : it->getFollowers()) {
         std::cout << "@" << acc.getUsername() << " ";
     }
     std::cout << std::endl;
