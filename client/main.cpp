@@ -17,6 +17,11 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 	profile = profile.substr(1);
+	if (profile.length() < 4 || profile.length() > 20) {
+		std::cout << "[ERROR] Invalid username." << std::endl;
+		std::cout << "Username must have atleast 4 and at most 20 characters." << std::endl;
+		return 1;
+	}
 
 	std::string ip = argv[2];
 	if (ip.length() > 15 || std::count(ip.begin(), ip.end(), '.') != 3) {

@@ -2,6 +2,8 @@
 #include "Client.hpp"
 #include <iostream>
 #include <string>
+#include <thread>
+#include <ctime>
 
 void Application::run(const std::string& profile, const std::string& ip, unsigned short port) {
     Client client(ip, port);
@@ -11,7 +13,7 @@ void Application::run(const std::string& profile, const std::string& ip, unsigne
         return;
     }
 
-    if (client.receiveMessage() <= 0) {
+    if (client.receiveMessage() < 0) {
         perror("b");
         return;
     }
@@ -22,7 +24,7 @@ void Application::run(const std::string& profile, const std::string& ip, unsigne
     try {
         if (std::stoul(session) == 0) {
             std::cout << "[ERROR] Invalid profile. Could not log in." << std::endl;
-            return;
+            exit(1);
         }
         else {
             std::cout << "[SUCCESS] Logged in with account @" << profile << "." << std::endl;
@@ -33,11 +35,19 @@ void Application::run(const std::string& profile, const std::string& ip, unsigne
         return;
     }
 
+    std::thread notificationsThread(handleNotifications, std::ref(client));
+
+    handleCommands(client, profile, session);
+
+    notificationsThread.join();
+}
+
+void Application::handleCommands(Client& client, const std::string& profile, const std::string& session) {
     std::string message;
 
     while (true) {
         std::cout << ">";
-        std::getline(std::cin, message);
+        std::getline(std::cin, message); // blocking call
 
         std::string commandStr = message.substr(0, message.find(" "));
         std::string payloadStr = message.substr(message.find(" ") + 1);
@@ -55,7 +65,7 @@ void Application::run(const std::string& profile, const std::string& ip, unsigne
                 continue;
             }
 
-            if (client.receiveMessage() <= 0) {
+            if (client.receiveMessage() < 0) {
                 perror("b");
                 continue;
             }
@@ -87,7 +97,7 @@ void Application::run(const std::string& profile, const std::string& ip, unsigne
                 continue;
             }
 
-            if (client.receiveMessage() <= 0) {
+            if (client.receiveMessage() < 0) {
                 perror("b");
                 continue;
             }
@@ -119,11 +129,47 @@ void Application::run(const std::string& profile, const std::string& ip, unsigne
             std::cout << "[ERROR] Invalid command." << std::endl;
             std::cout << "Type 'HELP' for a list of commands." << std::endl;
         }
-
-        if (client.sendMessage(message) < 0) {
-            std::cout << "[ERROR] Failed to send command. Try again." << std::endl;
-        }
     }  
+}
+
+void Application::handleNotifications(Client& client) {
+    while (true) {
+        //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+        if (client.nonBlockingReceiveMessage() < 0) {
+            continue;
+        }
+
+        std::string message = client.getMessage();
+        std::string commandStr = message.substr(0, message.find(","));
+
+        if (commandStr != "notify") {
+            continue;
+        }
+
+        std::string auxUsername = message.substr(message.find(",") + 1);
+        std::string username = auxUsername.substr(0, auxUsername.find(","));
+        std::string auxTimestamp = auxUsername.substr(auxUsername.find(",") + 1);
+        std::time_t timestamp = std::stol(auxTimestamp.substr(0, auxTimestamp.find(",")));
+        std::string auxAuthor = auxTimestamp.substr(auxTimestamp.find(",") + 1);
+        std::string author = auxAuthor.substr(0, auxAuthor.find(","));
+        std::string auxTweet = auxAuthor.substr(auxAuthor.find(",") + 1);
+        std::string tweet = auxTweet.substr(0, auxTweet.find(","));
+
+        std::tm* time = std::localtime(&timestamp);
+        char formatedTime[32];
+        std::strftime(formatedTime, 32, "%d/%m/%Y %H:%M:%S", time);
+
+        std::cout << std::endl << "[" << formatedTime << "] @" << author << " just tweeted: '" << tweet << "'." << std::endl;
+
+        bool sent = false;
+        do {
+            sent = client.sendMessage(message) >= 0;
+        } while (!sent);
+
+        std::cout << ">";
+        fflush(stdout);
+    }
 }
 
 void Application::printCommands() {

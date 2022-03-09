@@ -3,28 +3,21 @@
 #include <unistd.h>
 #include <string.h>
 
-Client::Client(const std::string& ip, unsigned short port) {
-    struct sockaddr_in serverAddr;
+std::mutex Client::mutex;
 
-	if ((this->sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+Client::Client(const std::string& ip, unsigned short port) {
+	if ((this->sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 		perror("a");
 		exit(1);
 	}
 
-	memset((char *) &serverAddr, 0, sizeof(serverAddr));
+	memset((char *) &this->serverAddr, 0, sizeof(this->serverAddr));
 	
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(port);
-	serverAddr.sin_addr.s_addr = inet_addr(ip.c_str());
+	this->serverAddr.sin_family = AF_INET;
+	this->serverAddr.sin_port = htons(port);
+	this->serverAddr.sin_addr.s_addr = inet_addr(ip.c_str());
 	
-	std::cout << "[INFO] Waiting for server to accept connection..." << std::endl;
-
-    if (connect(this->sock,(struct sockaddr *) &serverAddr,sizeof(serverAddr)) < 0) {
-		perror("b");
-		exit(1);
-	}
-
-	std::cout << "[SUCCESS] Connected to server!" << std::endl;
+	std::cout << "[INFO] Connecting to server..." << std::endl;
 }
 
 Client::~Client() {
@@ -32,14 +25,30 @@ Client::~Client() {
 }
 
 int Client::sendMessage(const std::string& message){
-    return send(this->sock, message.c_str(), message.length(), 0);
+    return sendto(this->sock, message.c_str(), message.length(), 0, (const sockaddr*) &this->serverAddr, sizeof(this->serverAddr));
 }
 
 int Client::receiveMessage() {
+	struct sockaddr_in recvAddr;
 	char buffer[BUFLEN];
-	int recvLen;
+	int recvLen, len = sizeof(sockaddr_in);
 
-	recvLen = recv(this->sock, buffer, BUFLEN, 0);
+	std::lock_guard clientGuard(mutex);
+
+	recvLen = recvfrom(this->sock, buffer, BUFLEN, 0, (sockaddr*) &this->serverAddr, (socklen_t*) &len);
+    this->message = buffer;
+
+	return recvLen;
+}
+
+int Client::nonBlockingReceiveMessage() {
+	struct sockaddr_in recvAddr;
+	char buffer[BUFLEN];
+	int recvLen, len = sizeof(sockaddr_in);
+
+	std::lock_guard clientGuard(mutex);
+
+	recvLen = recvfrom(this->sock, buffer, BUFLEN, MSG_DONTWAIT, (sockaddr*) &this->serverAddr, (socklen_t*) &len);
     this->message = buffer;
 
 	return recvLen;
