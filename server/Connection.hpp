@@ -16,7 +16,6 @@ public:
     Connection(int, struct sockaddr_in);
     int sendMessage(const std::string&);
     int receiveMessage();
-    void closeConnection();
     std::string getMessage() const;
     std::string getAddress() const;
     int getPort() const;

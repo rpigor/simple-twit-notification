@@ -13,7 +13,7 @@ private:
 
     static std::mutex mutex;
 
-    static void handleClient(Connection, std::map<std::string, Command*>);
+    static void handleRequest(Connection, std::map<std::string, Command*>, std::string);
     static void handleNotifications(Sessions&, std::map<Account, std::vector<Notification>>&);
 
 public:

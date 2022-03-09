@@ -5,7 +5,7 @@
 Server::Server(unsigned short port) {
     struct sockaddr_in serverAddr;
 
-	if ((this->sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+	if ((this->sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 		perror("a");
 		exit(1);
 	}
@@ -20,25 +20,24 @@ Server::Server(unsigned short port) {
 		perror("b");
 		exit(1);
 	}
-
-	if (listen(this->sock, SOMAXCONN) < 0) {
-		perror("c");
-		exit(1);
-	}
 }
 
 Server::~Server() {
     close(this->sock);
 }
 
-Connection Server::acceptClientSocket() {
-	struct sockaddr_in clientAddr;
-	int clientSocket, clientLen = sizeof(clientAddr);
+std::string Server::receiveMessage() {
+	char buffer[BUFLEN];
+	int addrLen = sizeof(this->clientAddr);
 
-	if ((clientSocket = accept(this->sock, (struct sockaddr*) &clientAddr, (socklen_t*) &clientLen)) == -1) {
-		perror("1");
+	if (recvfrom(this->sock, buffer, BUFLEN, 0, (sockaddr*) &this->clientAddr, (socklen_t*) &addrLen) < 0) {
+		perror("c");
 		exit(1);
 	}
 
-	return Connection(clientSocket, clientAddr);
+	return buffer;
+}
+
+Connection Server::getConnection() {
+	return Connection(this->sock, this->clientAddr);
 }

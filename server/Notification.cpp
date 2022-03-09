@@ -5,6 +5,10 @@ Notification::Notification(const Account& account, Tweet tweet)
 
 }
 
+bool operator==(const Notification& lhs, const Notification& rhs) {
+    return lhs.author == rhs.author && lhs.tweet == rhs.tweet && lhs.pendingCount == rhs.pendingCount;
+}
+
 Account Notification::getAuthor() const {
     return this->author;
 }

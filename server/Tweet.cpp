@@ -6,6 +6,15 @@ Tweet::Tweet(const Account& account, const std::string& message)
     this->timestamp = std::time(nullptr);
 }
 
+Tweet::Tweet(const Account& account, const std::string& message, std::time_t timestamp) 
+    : account(account), message(message), timestamp(timestamp) {
+
+}
+
+bool operator==(const Tweet& lhs, const Tweet& rhs) {
+    return lhs.account == rhs.account && lhs.message == rhs.message && lhs.timestamp == rhs.timestamp;
+}
+
 unsigned long Tweet::getUid() const {
     return this->uid;
 }

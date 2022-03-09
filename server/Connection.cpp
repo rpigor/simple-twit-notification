@@ -11,21 +11,17 @@ Connection::Connection(int connSocket, struct sockaddr_in connAddr)
 }
 
 int Connection::sendMessage(const std::string& message) {
-    return send(this->connSocket, message.c_str(), message.length(), 0);
+    return sendto(this->connSocket, message.c_str(), message.length(), 0, (sockaddr*) &this->connAddr, sizeof(this->connAddr));
 }
 
 int Connection::receiveMessage() {
 	char buffer[BUFLEN];
-	int recvLen;
+	int recvLen, addrLen = sizeof(this->connAddr);
 
-	recvLen = recv(this->connSocket, buffer, BUFLEN, 0);
+	recvLen = recvfrom(this->connSocket, buffer, BUFLEN, 0, (sockaddr*) &this->connAddr, (socklen_t*) &addrLen);
     this->message = buffer;
 
 	return recvLen;
-}
-
-void Connection::closeConnection() {
-    close(this->connSocket);
 }
 
 std::string Connection::getMessage() const {
