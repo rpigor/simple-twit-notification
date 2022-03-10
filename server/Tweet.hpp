@@ -16,8 +16,8 @@ public:
     Tweet(const Account&, const std::string&, std::time_t);
     friend bool operator==(const Tweet&, const Tweet&);
     unsigned long getUid() const;
-    const Account& getAccount() const;
-    const std::string& getMessage() const;
-    const std::string& getDateTime() const;
+    Account getAccount() const;
+    std::string getMessage() const;
+    std::string getDateTime() const;
     std::intmax_t getEpoch() const;
 };

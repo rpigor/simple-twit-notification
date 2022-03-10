@@ -25,8 +25,6 @@ void NotificationResponseCommand::execute() {
 
     Notification notification(author, Tweet(author, message, timestamp));
 
-    //std::cout << notification.getAuthor().getUsername() << "," << notification.getTweet().getEpoch() << "," << notification.getTweet().getMessage() << std::endl;
-
     auto it = std::find(this->notifications.at(username).begin(), this->notifications.at(username).end(), notification);
     if (it == this->notifications.at(username).end()) {
         return;

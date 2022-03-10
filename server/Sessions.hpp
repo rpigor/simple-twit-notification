@@ -22,5 +22,5 @@ public:
     void deleteSession(const Account&, unsigned long);
     bool hasSession(const Account&) const;
     bool hasSession(const Account&, unsigned long) const;
-    std::pair<Session, Session> getActiveSessions(const Account&) const;
+    std::pair<Session, Session> getActiveSessions(const Account&);
 };

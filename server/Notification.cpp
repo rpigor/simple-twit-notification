@@ -1,7 +1,7 @@
 #include "Notification.hpp"
 
 Notification::Notification(const Account& account, Tweet tweet)
-    : author(account), tweet(tweet) {
+    : author(account), tweet(tweet), pendingCount(0) {
 
 }
 

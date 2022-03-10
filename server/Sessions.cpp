@@ -11,7 +11,7 @@ Session Sessions::createSession(Connection connection, const Account& account) {
     Session invalidSession(0, connection);
 
     if (!accountExists(account)) {
-        return invalidSession;
+        this->accounts.push_back(account);
     }
 
     if (this->sessions.find(account) == this->sessions.end()) {
@@ -82,6 +82,6 @@ bool Sessions::hasSession(const Account& account, unsigned long session) const {
     return this->sessions.find(account)->second.first.getSessionId() == session || this->sessions.find(account)->second.second.getSessionId() == session;
 }
 
-std::pair<Session, Session> Sessions::getActiveSessions(const Account& account) const {
-    return this->sessions.at(account);
+std::pair<Session, Session> Sessions::getActiveSessions(const Account& account) {
+    return this->sessions[account];
 }
