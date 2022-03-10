@@ -59,6 +59,11 @@ void Application::handleCommands(Client& client, const std::string& profile, con
                 continue;
             }
 
+            if (payloadStr == profile) {
+                std::cout << "[ERROR] You cannot follow yourself, fool." << std::endl;
+                continue;
+            }
+
             std::string serverMessage = "seguir,"+ profile + "," + session + "," + payloadStr.substr(1) + ",";
             if (client.sendMessage(serverMessage) < 0) {
                 perror("a");
@@ -73,7 +78,7 @@ void Application::handleCommands(Client& client, const std::string& profile, con
             std::string serverResponse = client.getMessage();
             if (serverResponse.find("sessao invalida") != std::string::npos) {
                 std::cout << "[ERROR] Invalid session. Try to log in again." << std::endl;
-                return;
+                exit(1);
             }
             else if (serverResponse.find("perfil nao pode seguir a si mesmo") != std::string::npos) {
                 std::cout << "[ERROR] You cannot follow yourself, fool." << std::endl;
@@ -91,6 +96,11 @@ void Application::handleCommands(Client& client, const std::string& profile, con
             std::cout << "[SUCCESS] You followed " << payloadStr << "!" << std::endl;
         }
         else if (commandStr == "SEND") {
+            if (payloadStr.length() > 128) {
+                std::cout << "[ERROR] Tweet exceeds 128 characters. Try being more direct." << std::endl;
+                continue;
+            }
+
             std::string serverMessage = "tweet," + profile + "," + session + "," + payloadStr + ",";
             if (client.sendMessage(serverMessage) < 0) {
                 perror("a");
@@ -105,10 +115,10 @@ void Application::handleCommands(Client& client, const std::string& profile, con
             std::string serverResponse = client.getMessage();
             if (serverResponse.find("sessao invalida") != std::string::npos) {
                 std::cout << "[ERROR] Invalid session. Try to log in again." << std::endl;
-                return;
+                exit(1);
             }
-            else if (serverResponse.find("mensagem excede 140 caracteres") != std::string::npos) {
-                std::cout << "[ERROR] Tweet exceeds 140 characters. Try being more direct." << std::endl;
+            else if (serverResponse.find("mensagem excede 128 caracteres") != std::string::npos) {
+                std::cout << "[ERROR] Tweet exceeds 128 characters. Try being more direct." << std::endl;
                 continue;
             }
             else if (serverResponse.find(serverMessage) == std::string::npos) {
@@ -123,7 +133,7 @@ void Application::handleCommands(Client& client, const std::string& profile, con
         }
         else if (message == "EXIT") {
             std::cout << "[INFO] Exiting..." << std::endl;
-            return;
+            exit(0);
         }
         else {
             std::cout << "[ERROR] Invalid command." << std::endl;

@@ -29,7 +29,6 @@ int Client::sendMessage(const std::string& message){
 }
 
 int Client::receiveMessage() {
-	struct sockaddr_in recvAddr;
 	char buffer[BUFLEN];
 	int recvLen, len = sizeof(sockaddr_in);
 
@@ -42,7 +41,6 @@ int Client::receiveMessage() {
 }
 
 int Client::nonBlockingReceiveMessage() {
-	struct sockaddr_in recvAddr;
 	char buffer[BUFLEN];
 	int recvLen, len = sizeof(sockaddr_in);
 

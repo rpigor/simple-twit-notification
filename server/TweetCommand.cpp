@@ -36,12 +36,12 @@ void TweetCommand::execute() {
         return;
     }
 
-    if (message.length() > 140) {
-        if (this->connection.sendMessage("mensagem excede 140 caracteres") < 0) {
+    if (message.length() > 128) {
+        if (this->connection.sendMessage("mensagem excede 128 caracteres") < 0) {
             perror("sendto()");
             exit(1);
         }
-        std::cout << "Tweet message exceeds 140 characters. Abording operation.\n";
+        std::cout << "Tweet message exceeds 128 characters. Abording operation.\n";
         return;
     }
 
