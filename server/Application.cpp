@@ -83,7 +83,7 @@ void Application::handleRequest(Connection conn, std::map<std::string, Command*>
 
 void Application::handleNotifications(Sessions& sessions, std::map<Account, std::vector<Notification>>& notifications) {
 	while (true) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(700));
+		std::this_thread::sleep_for(std::chrono::milliseconds(750));
 		std::lock_guard<std::mutex> notificationGuard(mutex);
 
 		for (auto& entry : notifications) {
@@ -91,7 +91,7 @@ void Application::handleNotifications(Sessions& sessions, std::map<Account, std:
 
 			// consumes pending notification for client
 			for (auto it = entry.second.begin(); it < entry.second.end(); ++it) {
-				std::string notifyMessage = "notify," + account.getUsername() + "," + std::to_string(it->getTweet().getEpoch()) + "," + it->getAuthor().getUsername() + "," + it->getTweet().getMessage() + ",";
+				std::string notifyMessage = "notify," + account.getUsername() + "," + std::to_string(it->getTweet().getEpoch()) + "," + it->getAuthor().getUsername() + "," + std::to_string(it->getTweet().getMessage().length()) + "," + it->getTweet().getMessage() + ",";
 				std::pair<Session, Session> activeSessions = sessions.getActiveSessions(account);
 
 				if (activeSessions.first.getSessionId() == 0 && activeSessions.second.getSessionId() == 0) {

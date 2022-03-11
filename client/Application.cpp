@@ -163,8 +163,10 @@ void Application::handleNotifications(Client& client) {
         std::time_t timestamp = std::stol(auxTimestamp.substr(0, auxTimestamp.find(",")));
         std::string auxAuthor = auxTimestamp.substr(auxTimestamp.find(",") + 1);
         std::string author = auxAuthor.substr(0, auxAuthor.find(","));
-        std::string auxTweet = auxAuthor.substr(auxAuthor.find(",") + 1);
-        std::string tweet = auxTweet.substr(0, auxTweet.find_last_of(","));
+        std::string auxLen = auxAuthor.substr(auxAuthor.find(",") + 1);
+        int len = std::stoi(auxLen.substr(0, auxLen.find(",")));
+        std::string auxTweet = auxLen.substr(auxLen.find(",") + 1);
+        std::string tweet = auxTweet.substr(0, len);
 
         std::tm* time = std::localtime(&timestamp);
         char formatedTime[32];
@@ -172,9 +174,10 @@ void Application::handleNotifications(Client& client) {
 
         std::cout << std::endl << "[" << formatedTime << "] @" << author << " just tweeted: '" << tweet << "'." << std::endl;
 
+        std::string notifyMessage = "notify," + username + "," + std::to_string(timestamp) + "," + author + "," + std::to_string(len) + "," + tweet + ",";
         bool sent = false;
         do {
-            sent = client.sendMessage(message) >= 0;
+            sent = client.sendMessage(notifyMessage) >= 0;
         } while (!sent);
 
         std::cout << ">";

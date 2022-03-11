@@ -20,26 +20,14 @@ void NotificationResponseCommand::execute() {
     std::time_t timestamp = std::stol(auxTimestamp.substr(0, auxTimestamp.find(",")));
     std::string auxAuthor = auxTimestamp.substr(auxTimestamp.find(",") + 1);
     std::string author = auxAuthor.substr(0, auxAuthor.find(","));
-    std::string auxMessage = auxAuthor.substr(auxAuthor.find(",") + 1);
-    std::string message = auxMessage.substr(0, auxMessage.find_last_of(","));
+    std::string auxLen = auxAuthor.substr(auxAuthor.find(",") + 1);
+    int len = std::stoi(auxLen.substr(0, auxLen.find(",")));
+    std::string auxMessage = auxLen.substr(auxLen.find(",") + 1);
+    std::string message = auxMessage.substr(0, len);
 
-    /*Notification notification(author, Tweet(author, message, timestamp));
+    Notification notification(author, Tweet(author, message, timestamp));
 
     auto it = std::find(this->notifications.at(username).begin(), this->notifications.at(username).end(), notification);
-    if (it == this->notifications.at(username).end()) {
-        return;
-    }*/
-
-    auto it = this->notifications.at(username).begin();
-    for (; it < this->notifications.at(username).end(); ++it) {
-        if (it->getAuthor().getUsername() == author &&
-        it->getTweet().getAccount().getUsername() == author &&
-        static_cast<std::time_t>(it->getTweet().getEpoch()) == timestamp &&
-        message.find(it->getTweet().getMessage()) != std::string::npos) {
-            break;
-        }
-    }
-
     if (it == this->notifications.at(username).end()) {
         return;
     }
