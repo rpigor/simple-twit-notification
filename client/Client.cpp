@@ -11,11 +11,11 @@ Client::Client(const std::string& ip, unsigned short port) {
 		exit(1);
 	}
 
-	memset((char *) &this->serverAddr, 0, sizeof(this->serverAddr));
-	
 	this->serverAddr.sin_family = AF_INET;
 	this->serverAddr.sin_port = htons(port);
 	this->serverAddr.sin_addr.s_addr = inet_addr(ip.c_str());
+
+	bzero(&(this->serverAddr.sin_zero), 8);
 	
 	std::cout << "[INFO] Connecting to server..." << std::endl;
 }

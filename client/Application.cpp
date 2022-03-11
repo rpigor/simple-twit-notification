@@ -164,7 +164,7 @@ void Application::handleNotifications(Client& client) {
         std::string auxAuthor = auxTimestamp.substr(auxTimestamp.find(",") + 1);
         std::string author = auxAuthor.substr(0, auxAuthor.find(","));
         std::string auxTweet = auxAuthor.substr(auxAuthor.find(",") + 1);
-        std::string tweet = auxTweet.substr(0, auxTweet.find(","));
+        std::string tweet = auxTweet.substr(0, auxTweet.find_last_of(","));
 
         std::tm* time = std::localtime(&timestamp);
         char formatedTime[32];

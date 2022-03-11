@@ -10,11 +10,11 @@ Server::Server(unsigned short port) {
 		exit(1);
 	}
 
-	memset((char *) &serverAddr, 0, sizeof(serverAddr));
-	
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(port);
 	serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	bzero(&(serverAddr.sin_zero), 8);
 	
 	if (bind(this->sock, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
 		perror("b");

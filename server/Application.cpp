@@ -83,7 +83,7 @@ void Application::handleRequest(Connection conn, std::map<std::string, Command*>
 
 void Application::handleNotifications(Sessions& sessions, std::map<Account, std::vector<Notification>>& notifications) {
 	while (true) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+		std::this_thread::sleep_for(std::chrono::milliseconds(700));
 		std::lock_guard<std::mutex> notificationGuard(mutex);
 
 		for (auto& entry : notifications) {

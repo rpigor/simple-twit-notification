@@ -16,7 +16,7 @@ void TweetCommand::execute() {
     std::string auxSession = this->payload.substr(this->payload.find(",") + 1);
     std::string session = auxSession.substr(0, auxSession.find(","));
     std::string auxMessage = auxSession.substr(auxSession.find(",") + 1);
-    std::string message = auxMessage.substr(0, auxMessage.find(","));
+    std::string message = auxMessage.substr(0, auxMessage.find_last_of(","));
     
     if (!this->sessions.accountExists(username)) {
         if (this->connection.sendMessage("perfil nao existe") < 0) {
