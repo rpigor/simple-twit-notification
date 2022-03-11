@@ -32,7 +32,7 @@ int Client::receiveMessage() {
 	char buffer[BUFLEN];
 	int recvLen, len = sizeof(sockaddr_in);
 
-	std::lock_guard clientGuard(mutex);
+	std::lock_guard<std::mutex> clientGuard(mutex);
 
 	recvLen = recvfrom(this->sock, buffer, BUFLEN, 0, (sockaddr*) &this->serverAddr, (socklen_t*) &len);
     this->message = buffer;
@@ -44,7 +44,7 @@ int Client::nonBlockingReceiveMessage() {
 	char buffer[BUFLEN];
 	int recvLen, len = sizeof(sockaddr_in);
 
-	std::lock_guard clientGuard(mutex);
+	std::lock_guard<std::mutex> clientGuard(mutex);
 
 	recvLen = recvfrom(this->sock, buffer, BUFLEN, MSG_DONTWAIT, (sockaddr*) &this->serverAddr, (socklen_t*) &len);
     this->message = buffer;
