@@ -19,7 +19,6 @@ bool operator<(const Account& lhs, const Account& rhs) {
 }
 
 std::istream& operator>>(std::istream& is, Account& acc) {
-    is >> acc.uid;
     is >> acc.username;
 
     int followingLen;
@@ -42,7 +41,7 @@ std::istream& operator>>(std::istream& is, Account& acc) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Account& acc) {
-    os << acc.uid << " " << acc.username << " " << acc.getFollowing().size() << " ";
+    os << acc.username << " " << acc.getFollowing().size() << " ";
 
     for (auto it = acc.getFollowing().begin(); it < acc.getFollowing().end(); ++it) {
         os << *it << " ";
