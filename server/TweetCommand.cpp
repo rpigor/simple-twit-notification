@@ -45,13 +45,13 @@ void TweetCommand::execute() {
         return;
     }
 
-    std::vector<Account>::iterator it = this->sessions.getAccounts().begin();
+    std::vector<std::shared_ptr<Account>>::iterator it = this->sessions.getAccounts().begin();
     while (it != this->sessions.getAccounts().end()) {
-        if (it->getUsername() == username)
+        if ((*it)->getUsername() == username)
             break;
         ++it;
     }
-    Account user = *it;
+    Account user = **it;
     Tweet userTweet(user, message);
     this->tweets.push_back(userTweet);
 

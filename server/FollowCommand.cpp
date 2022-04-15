@@ -55,32 +55,32 @@ void FollowCommand::execute() {
         return;
     }
 
-    std::vector<Account>::iterator it = this->sessions.getAccounts().begin();
+    std::vector<std::shared_ptr<Account>>::iterator it = this->sessions.getAccounts().begin();
     while (it != this->sessions.getAccounts().end()) {
-        if (it->getUsername() == username)
+        if ((*it)->getUsername() == username)
             break;
         ++it;
     }
-    it->follow(userToFollow);
+    (*it)->follow(userToFollow);
 
     std::cout << "Account @" << username << " just followed account @" << userToFollow << ".\n";
 
     std::cout << "@" << username <<  " is following: ";
-    for (const Account& acc : it->getFollowing()) {
+    for (const Account& acc : (*it)->getFollowing()) {
         std::cout << "@" << acc.getUsername() << " ";
     }
     std::cout << std::endl;
 
     it = this->sessions.getAccounts().begin();
     while (it != this->sessions.getAccounts().end()) {
-        if (it->getUsername() == userToFollow)
+        if ((*it)->getUsername() == userToFollow)
             break;
         ++it;
     }
-    it->beFollowedBy(username);
+    (*it)->beFollowedBy(username);
 
-    std::cout << "@" << it->getUsername() <<  " is being followed by: ";
-    for (const Account& acc : it->getFollowers()) {
+    std::cout << "@" << (*it)->getUsername() <<  " is being followed by: ";
+    for (const Account& acc : (*it)->getFollowers()) {
         std::cout << "@" << acc.getUsername() << " ";
     }
     std::cout << std::endl;

@@ -16,13 +16,13 @@
 #include <fstream>
 #include <csignal>
 
-std::vector<Account> Application::accounts;
+std::vector<std::shared_ptr<Account>> Application::accounts;
 
 std::mutex Application::mutex;
 
 void Application::run() {
 	// handle accounts backup
-	accounts = recoverAccounts();
+	recoverAccounts();
 	std::signal(SIGINT, backupAccounts);
 	std::signal(SIGABRT, backupAccounts);
 	std::signal(SIGTERM, backupAccounts);
@@ -119,8 +119,8 @@ void Application::backupAccounts(int i) {
 	if (file.good()) {
 		file << accounts.size() << " ";
 
-		for (const Account& acc : accounts) {
-			file << acc << " ";
+		for (auto acc : accounts) {
+			file << *acc << " ";
 		}
 
 		std::cout << "Saved " << accounts.size() << " accounts to backup." << std::endl;
@@ -130,9 +130,7 @@ void Application::backupAccounts(int i) {
 	exit(0);
 }
 
-std::vector<Account> Application::recoverAccounts() {
-	std::vector<Account> accountVector;
-
+void Application::recoverAccounts() {
 	std::ifstream file(accountsFilename, std::ios::in);
 	if (file.good()) {
 		int accountsLen;
@@ -141,12 +139,10 @@ std::vector<Account> Application::recoverAccounts() {
 		for (int i = 0; i < accountsLen; ++i) {
 			Account auxAcc;
 			file >> auxAcc;
-			accountVector.push_back(auxAcc);
+			accounts.push_back(std::make_shared<Account>(auxAcc));
 		}
 
 		std::cout << "Recovered " << accountsLen << " accounts from backup." << std::endl;
 	}
 	file.close();
-
-	return accountVector;
 }

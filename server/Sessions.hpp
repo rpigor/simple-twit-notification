@@ -7,17 +7,18 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 
 class Sessions {
 private:
-    std::vector<Account>& accounts;
+    std::vector<std::shared_ptr<Account>>& accounts;
     std::map<Account, std::pair<Session, Session>> sessions;
 	unsigned long sessionCount;
 
 public:
-    Sessions(std::vector<Account>&);
+    Sessions(std::vector<std::shared_ptr<Account>>&);
     Session createSession(Connection, const Account&);
-    std::vector<Account>& getAccounts() const;
+    std::vector<std::shared_ptr<Account>>& getAccounts() const;
     bool accountExists(const Account&);
     void deleteSession(const Account&, unsigned long);
     bool hasSession(const Account&) const;

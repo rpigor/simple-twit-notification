@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <limits>
 
-Sessions::Sessions(std::vector<Account>& accounts)
+Sessions::Sessions(std::vector<std::shared_ptr<Account>>& accounts)
     : accounts(accounts), sessionCount(0) {
 
 }
@@ -11,7 +11,7 @@ Session Sessions::createSession(Connection connection, const Account& account) {
     Session invalidSession(0, connection);
 
     if (!accountExists(account)) {
-        this->accounts.push_back(account);
+        this->accounts.push_back(std::make_shared<Account>(account));
     }
 
     if (this->sessions.find(account) == this->sessions.end()) {
@@ -35,12 +35,21 @@ Session Sessions::createSession(Connection connection, const Account& account) {
     return validSession;
 }
 
-std::vector<Account>& Sessions::getAccounts() const {
+std::vector<std::shared_ptr<Account>>& Sessions::getAccounts() const {
     return this->accounts;
 }
 
 bool Sessions::accountExists(const Account& account) {
-    return std::find(this->accounts.begin(), this->accounts.end(), account) != this->accounts.end();
+    // return std::find(this->accounts.begin(), this->accounts.end(), account) != this->accounts.end();
+    
+    auto it = this->accounts.begin();
+    while (it != this->accounts.end()) {
+        if ((**it) == account) {
+            return true;
+        }
+        ++it;
+    }
+    return false;
 }
 
 void Sessions::deleteSession(const Account& account, unsigned long session) { 
