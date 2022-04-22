@@ -24,17 +24,17 @@ std::istream& operator>>(std::istream& is, Account& acc) {
     int followingLen;
     is >> followingLen;
     for (int i = 0; i < followingLen; ++i) {
-        Account auxAcc;
-        is >> auxAcc;
-        acc.following.push_back(auxAcc);
+        std::string auxUsername;
+        is >> auxUsername;
+        acc.following.push_back(auxUsername);
     }
 
     int followerLen;
     is >> followerLen;
     for (int i = 0; i < followerLen; ++i) {
-        Account auxAcc;
-        is >> auxAcc;
-        acc.followers.push_back(auxAcc);
+        std::string auxUsername;
+        is >> auxUsername;
+        acc.followers.push_back(auxUsername);
     }
 
     return is;
@@ -71,26 +71,26 @@ std::string Account::getUsername() const {
     return this->username;
 }
 
-const std::vector<Account>& Account::getFollowing() const {
+const std::vector<std::string>& Account::getFollowing() const {
     return this->following;
 }
 
-const std::vector<Account>& Account::getFollowers() const {
+const std::vector<std::string>& Account::getFollowers() const {
     return this->followers;
 }
 
-void Account::follow(const Account& account) {
-    if (std::find(this->following.begin(), this->following.end(), account) != this->following.end()) {
+void Account::follow(const std::string& username) {
+    if (std::find(this->following.begin(), this->following.end(), username) != this->following.end()) {
         return;
     }
 
-    this->following.push_back(account);
+    this->following.push_back(username);
 }
 
-void Account::beFollowedBy(const Account& account) {
-    if (std::find(this->followers.begin(), this->followers.end(), account) != this->followers.end()) {
+void Account::beFollowedBy(const std::string& username) {
+    if (std::find(this->followers.begin(), this->followers.end(), username) != this->followers.end()) {
         return;
     }
 
-    this->followers.push_back(account);
+    this->followers.push_back(username);
 }

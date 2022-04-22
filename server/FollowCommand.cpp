@@ -66,8 +66,8 @@ void FollowCommand::execute() {
     std::cout << "Account @" << username << " just followed account @" << userToFollow << ".\n";
 
     std::cout << "@" << username <<  " is following: ";
-    for (const Account& acc : (*it)->getFollowing()) {
-        std::cout << "@" << acc.getUsername() << " ";
+    for (const std::string& auxUsername : (*it)->getFollowing()) {
+        std::cout << "@" << auxUsername << " ";
     }
     std::cout << std::endl;
 
@@ -80,8 +80,8 @@ void FollowCommand::execute() {
     (*it)->beFollowedBy(username);
 
     std::cout << "@" << (*it)->getUsername() <<  " is being followed by: ";
-    for (const Account& acc : (*it)->getFollowers()) {
-        std::cout << "@" << acc.getUsername() << " ";
+    for (const std::string& auxUsername : (*it)->getFollowers()) {
+        std::cout << "@" << auxUsername << " ";
     }
     std::cout << std::endl;
 

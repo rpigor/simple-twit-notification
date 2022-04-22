@@ -1,12 +1,12 @@
 #include "TweetCommand.hpp"
 #include <iostream>
 
-TweetCommand::TweetCommand(Sessions& sessions, std::vector<Tweet>& tweets, std::map<Account, std::vector<Notification>>& notifications)
+TweetCommand::TweetCommand(Sessions& sessions, std::vector<Tweet>& tweets, std::map<std::string, std::vector<Notification>>& notifications)
     : Command(sessions), tweets(tweets), notifications(notifications) {
 
 }
 
-TweetCommand::TweetCommand(Connection connection, Sessions& sessions, std::vector<Tweet>& tweets, std::map<Account, std::vector<Notification>>& notifications, const std::string& payload)
+TweetCommand::TweetCommand(Connection connection, Sessions& sessions, std::vector<Tweet>& tweets, std::map<std::string, std::vector<Notification>>& notifications, const std::string& payload)
     : Command(connection, sessions, payload), tweets(tweets), notifications(notifications) {
 
 }
@@ -52,19 +52,19 @@ void TweetCommand::execute() {
         ++it;
     }
     Account user = **it;
-    Tweet userTweet(user, message);
+    Tweet userTweet(user.getUsername(), message);
     this->tweets.push_back(userTweet);
 
     // push to notification queue
-    for (const Account& follower : user.getFollowers()) {
-        this->notifications[follower].push_back(Notification(user, userTweet));
+    for (const std::string& follower : user.getFollowers()) {
+        this->notifications[follower].push_back(Notification(user.getUsername(), userTweet));
     }
 
     std::cout << "Account @" << username << " just tweeted: \"" << message << "\"." << std::endl;
 
     std::cout << "@" << username << "'s tweets: ";
     for (const Tweet& tt : this->tweets) {
-        if (tt.getAccount().getUsername() == username) {
+        if (tt.getUsername() == username) {
             std::cout << "\"" << tt.getMessage() << "\" ";
         }
     }

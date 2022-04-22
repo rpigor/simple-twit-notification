@@ -19,7 +19,7 @@ private:
     static std::mutex mutex;
 
     static void handleRequest(Connection, std::map<std::string, Command*>, std::string);
-    static void handleNotifications(Sessions&, std::map<Account, std::vector<Notification>>&);
+    static void handleNotifications(Sessions&, std::map<std::string, std::vector<Notification>>&);
     static void backupAccounts(int i);
     static void recoverAccounts();
 

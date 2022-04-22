@@ -9,8 +9,8 @@ class Account {
 private:
     unsigned long uid;
     std::string username;
-    std::vector<Account> following;
-    std::vector<Account> followers;
+    std::vector<std::string> following;
+    std::vector<std::string> followers;
 
 public:
     Account();
@@ -21,8 +21,8 @@ public:
     friend std::ostream& operator<<(std::ostream&, const Account&);
     unsigned long getUid() const;
     std::string getUsername() const; 
-    const std::vector<Account>& getFollowing() const;
-    const std::vector<Account>& getFollowers() const;
-    void follow(const Account&);
-    void beFollowedBy(const Account&);
+    const std::vector<std::string>& getFollowing() const;
+    const std::vector<std::string>& getFollowers() const;
+    void follow(const std::string&);
+    void beFollowedBy(const std::string&);
 };

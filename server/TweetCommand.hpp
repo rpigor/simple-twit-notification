@@ -12,11 +12,11 @@
 class TweetCommand : public Command {
 private:
     std::vector<Tweet>& tweets;
-    std::map<Account, std::vector<Notification>>& notifications;
+    std::map<std::string, std::vector<Notification>>& notifications;
 
 public:
-    TweetCommand(Sessions&, std::vector<Tweet>&, std::map<Account, std::vector<Notification>>&);
-    TweetCommand(Connection, Sessions&, std::vector<Tweet>&, std::map<Account, std::vector<Notification>>&, const std::string&);
+    TweetCommand(Sessions&, std::vector<Tweet>&, std::map<std::string, std::vector<Notification>>&);
+    TweetCommand(Connection, Sessions&, std::vector<Tweet>&, std::map<std::string, std::vector<Notification>>&, const std::string&);
     void execute() override;
     std::string name() const override;
 };

@@ -2,17 +2,18 @@
 
 #include "Account.hpp"
 #include "Tweet.hpp"
+#include <string>
 
 class Notification {
 private:
-    Account author;
+    std::string author;
     Tweet tweet;
     unsigned long pendingCount;
 
 public:
-    Notification(const Account&, Tweet);
+    Notification(const std::string&, Tweet);
     friend bool operator==(const Notification&, const Notification&);
-    Account getAuthor() const;
+    std::string getAuthor() const;
     Tweet getTweet() const;
     unsigned long getPendingCount() const;
 };

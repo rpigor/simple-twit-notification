@@ -4,12 +4,12 @@
 #include <algorithm>
 #include <ctime>
 
-NotificationResponseCommand::NotificationResponseCommand(Sessions& sessions, std::map<Account, std::vector<Notification>>& notifications)
+NotificationResponseCommand::NotificationResponseCommand(Sessions& sessions, std::map<std::string, std::vector<Notification>>& notifications)
     : Command(sessions), notifications(notifications) {
 
 }
 
-NotificationResponseCommand::NotificationResponseCommand(Connection connection, Sessions& sessions, std::map<Account, std::vector<Notification>>& notifications, const std::string& payload)
+NotificationResponseCommand::NotificationResponseCommand(Connection connection, Sessions& sessions, std::map<std::string, std::vector<Notification>>& notifications, const std::string& payload)
     : Command(connection, sessions, payload), notifications(notifications) {
 
 }

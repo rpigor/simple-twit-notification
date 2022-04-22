@@ -7,7 +7,6 @@
 #include "FollowCommand.hpp"
 #include "TweetCommand.hpp"
 #include "NotificationResponseCommand.hpp"
-
 #include <iostream>
 #include <vector>
 #include <map>
@@ -30,7 +29,7 @@ void Application::run() {
 
 	Sessions sessions(accounts);
 	std::vector<Tweet> tweets;
-	std::map<Account, std::vector<Notification>> notifications;
+	std::map<std::string, std::vector<Notification>> notifications;
 
 	// initialize commands
 	std::map<std::string, Command*> commands;
@@ -81,18 +80,25 @@ void Application::handleRequest(Connection conn, std::map<std::string, Command*>
 	std::cout << std::endl;
 }
 
-void Application::handleNotifications(Sessions& sessions, std::map<Account, std::vector<Notification>>& notifications) {
+void Application::handleNotifications(Sessions& sessions, std::map<std::string, std::vector<Notification>>& notifications) {
 	while (true) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(750));
 		std::lock_guard<std::mutex> notificationGuard(mutex);
 
 		for (auto& entry : notifications) {
-			Account account = entry.first;
+			auto it = accounts.begin();
+			while (it != accounts.end()) {
+				if ((*it)->getUsername() == entry.first) {
+					break;
+				}
+				++it;
+			}
+			Account account = **it;
 
 			// consumes pending notification for client
 			for (auto it = entry.second.begin(); it < entry.second.end(); ++it) {
-				std::string notifyMessage = "notify," + account.getUsername() + "," + std::to_string(it->getTweet().getEpoch()) + "," + it->getAuthor().getUsername() + "," + std::to_string(it->getTweet().getMessage().length()) + "," + it->getTweet().getMessage() + ",";
-				std::pair<Session, Session> activeSessions = sessions.getActiveSessions(account);
+				std::string notifyMessage = "notify," + account.getUsername() + "," + std::to_string(it->getTweet().getEpoch()) + "," + it->getAuthor() + "," + std::to_string(it->getTweet().getMessage().length()) + "," + it->getTweet().getMessage() + ",";
+				std::pair<Session, Session> activeSessions = sessions.getActiveSessions(account.getUsername());
 
 				if (activeSessions.first.getSessionId() == 0 && activeSessions.second.getSessionId() == 0) {
 					continue;
