@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <limits>
 
-Sessions::Sessions(std::vector<std::shared_ptr<Account>>& accounts)
+Sessions::Sessions(Accounts& accounts)
     : accounts(accounts), sessionCount(0) {
 
 }
@@ -10,8 +10,8 @@ Sessions::Sessions(std::vector<std::shared_ptr<Account>>& accounts)
 Session Sessions::createSession(Connection connection, const std::string& username) {
     Session invalidSession(0, connection);
 
-    if (!accountExists(username)) {
-        this->accounts.push_back(std::make_shared<Account>(username));
+    if (!this->accounts.accountExists(username)) {
+        this->accounts.createAccount(username);
     }
 
     if (this->sessions.find(username) == this->sessions.end()) {
@@ -35,21 +35,8 @@ Session Sessions::createSession(Connection connection, const std::string& userna
     return validSession;
 }
 
-std::vector<std::shared_ptr<Account>>& Sessions::getAccounts() const {
+Accounts& Sessions::getAccounts() const {
     return this->accounts;
-}
-
-bool Sessions::accountExists(const std::string& username) {
-    // return std::find(this->accounts.begin(), this->accounts.end(), account) != this->accounts.end();
-    
-    auto it = this->accounts.begin();
-    while (it != this->accounts.end()) {
-        if ((*it)->getUsername() == username) {
-            return true;
-        }
-        ++it;
-    }
-    return false;
 }
 
 void Sessions::deleteSession(const std::string& username, unsigned long session) { 

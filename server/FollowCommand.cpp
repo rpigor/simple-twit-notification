@@ -19,7 +19,7 @@ void FollowCommand::execute() {
     std::string auxUserToFollow = auxSession.substr(auxSession.find(",") + 1);
     std::string userToFollow = auxUserToFollow.substr(0, auxUserToFollow.find(","));
 
-    if (!this->sessions.accountExists(username)) {
+    if (!this->sessions.getAccounts().accountExists(username)) {
         if (this->connection.sendMessage("perfil nao existe") < 0) {
             perror("sendto()");
             exit(1);
@@ -28,7 +28,7 @@ void FollowCommand::execute() {
         return;
     }
 
-    if (!this->sessions.accountExists(userToFollow)) {
+    if (!this->sessions.getAccounts().accountExists(userToFollow)) {
         if (this->connection.sendMessage("perfil para seguir nao existe") < 0) {
             perror("sendto()");
             exit(1);

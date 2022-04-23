@@ -15,7 +15,7 @@
 #include <fstream>
 #include <csignal>
 
-std::vector<std::shared_ptr<Account>> Application::accounts;
+Accounts Application::accounts;
 
 std::mutex Application::mutex;
 
@@ -86,14 +86,7 @@ void Application::handleNotifications(Sessions& sessions, std::map<std::string, 
 		std::lock_guard<std::mutex> notificationGuard(mutex);
 
 		for (auto& entry : notifications) {
-			auto it = accounts.begin();
-			while (it != accounts.end()) {
-				if ((*it)->getUsername() == entry.first) {
-					break;
-				}
-				++it;
-			}
-			Account account = **it;
+			Account account = *accounts.findAccount(entry.first);
 
 			// consumes pending notification for client
 			for (auto it = entry.second.begin(); it < entry.second.end(); ++it) {
@@ -145,7 +138,7 @@ void Application::recoverAccounts() {
 		for (int i = 0; i < accountsLen; ++i) {
 			Account auxAcc;
 			file >> auxAcc;
-			accounts.push_back(std::make_shared<Account>(auxAcc));
+			accounts.createAccount(auxAcc);
 		}
 
 		std::cout << "Recovered " << accountsLen << " accounts from backup." << std::endl;

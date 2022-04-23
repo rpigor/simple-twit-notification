@@ -4,6 +4,7 @@
 #include "Command.hpp"
 #include "Notification.hpp"
 #include "Account.hpp"
+#include "Accounts.hpp"
 #include <vector>
 #include <map>
 #include <string>
@@ -15,7 +16,7 @@ private:
     static constexpr unsigned short PORT = 8888;
     static constexpr const char* accountsFilename = "backup.txt";
 
-    static std::vector<std::shared_ptr<Account>> accounts;
+    static Accounts accounts;
     static std::mutex mutex;
 
     static void handleRequest(Connection, std::map<std::string, Command*>, std::string);

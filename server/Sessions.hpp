@@ -2,7 +2,7 @@
 
 #include "Session.hpp"
 #include "Connection.hpp"
-#include "Account.hpp"
+#include "Accounts.hpp"
 #include <utility>
 #include <string>
 #include <vector>
@@ -11,15 +11,14 @@
 
 class Sessions {
 private:
-    std::vector<std::shared_ptr<Account>>& accounts;
+    Accounts& accounts;
     std::map<std::string, std::pair<Session, Session>> sessions;
 	unsigned long sessionCount;
 
 public:
-    Sessions(std::vector<std::shared_ptr<Account>>&);
+    Sessions(Accounts&);
     Session createSession(Connection, const std::string&);
-    std::vector<std::shared_ptr<Account>>& getAccounts() const;
-    bool accountExists(const std::string&);
+    Accounts& getAccounts() const;
     void deleteSession(const std::string&, unsigned long);
     bool hasSession(const std::string&) const;
     bool hasSession(const std::string&, unsigned long) const;
