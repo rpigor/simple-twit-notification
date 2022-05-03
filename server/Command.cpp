@@ -5,8 +5,8 @@ Command::Command(Sessions& sessions)
 
 }
 
-Command::Command(Connection connection, Sessions& sessions, const std::string& payload)
-    : connection(connection), sessions(sessions), payload(payload) {
+Command::Command(Connectable* connectable, Sessions& sessions, const std::string& payload)
+    : connectable(connectable), sessions(sessions), payload(payload) {
 
 }
 
@@ -14,6 +14,6 @@ void Command::setPayload(const std::string& payload) {
     this->payload = payload;
 }
 
-void Command::setConnection(Connection connection) {
-    this->connection = connection;
+void Command::setConnectable(Connectable* connectable) {
+    this->connectable = connectable;
 }

@@ -9,14 +9,14 @@
 #include <map>
 #include <string>
 
-class TweetCommand : public Command {
+class GroupTweetCommand : public Command {
 private:
     std::vector<Tweet>& tweets;
     std::map<std::string, std::vector<Notification>>& notifications;
 
 public:
-    TweetCommand(Sessions&, std::vector<Tweet>&, std::map<std::string, std::vector<Notification>>&);
-    TweetCommand(Connectable*, Sessions&, std::vector<Tweet>&, std::map<std::string, std::vector<Notification>>&, const std::string&);
+    GroupTweetCommand(Sessions&, std::vector<Tweet>&, std::map<std::string, std::vector<Notification>>&);
+    GroupTweetCommand(Connectable*, Sessions&, std::vector<Tweet>&, std::map<std::string, std::vector<Notification>>&, const std::string&);
     void execute() override;
     std::string name() const override;
 };

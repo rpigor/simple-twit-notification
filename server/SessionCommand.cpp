@@ -6,20 +6,20 @@ SessionCommand::SessionCommand(Sessions& sessions)
 
 }
 
-SessionCommand::SessionCommand(Connection connection, Sessions& sessions, const std::string& payload)
-    : Command(connection, sessions, payload) {
+SessionCommand::SessionCommand(Connectable* connectable, Sessions& sessions, const std::string& payload)
+    : Command(connectable, sessions, payload) {
 
 }
 
 void SessionCommand::execute() {
     std::string username = this->payload.substr(0, this->payload.find(","));
 
-    unsigned long sessionId = this->sessions.createSession(this->connection, username).getSessionId();
+    unsigned long sessionId = this->sessions.createSession(*static_cast<Connection*>(this->connectable), username).getSessionId();
 
     std::cout << "Session [" << sessionId << "] generated to account @" << username << ".\n";
 
     std::string sessionMsg = "sessao," + std::to_string(sessionId) + ",";
-    this->connection.sendMessage(sessionMsg);
+    this->connectable->sendMessage(sessionMsg);
 }
 
 std::string SessionCommand::name() const {

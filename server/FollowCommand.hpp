@@ -7,7 +7,7 @@
 class FollowCommand : public Command {
 public:
     FollowCommand(Sessions&);
-    FollowCommand(Connection, Sessions&, const std::string&);
+    FollowCommand(Connectable*, Sessions&, const std::string&);
     void execute() override;
     std::string name() const override;
 };

@@ -1,17 +1,17 @@
-#include "TweetCommand.hpp"
+#include "GroupTweetCommand.hpp"
 #include <iostream>
 
-TweetCommand::TweetCommand(Sessions& sessions, std::vector<Tweet>& tweets, std::map<std::string, std::vector<Notification>>& notifications)
+GroupTweetCommand::GroupTweetCommand(Sessions& sessions, std::vector<Tweet>& tweets, std::map<std::string, std::vector<Notification>>& notifications)
     : Command(sessions), tweets(tweets), notifications(notifications) {
 
 }
 
-TweetCommand::TweetCommand(Connectable* connectable, Sessions& sessions, std::vector<Tweet>& tweets, std::map<std::string, std::vector<Notification>>& notifications, const std::string& payload)
+GroupTweetCommand::GroupTweetCommand(Connectable* connectable, Sessions& sessions, std::vector<Tweet>& tweets, std::map<std::string, std::vector<Notification>>& notifications, const std::string& payload)
     : Command(connectable, sessions, payload), tweets(tweets), notifications(notifications) {
 
 }
 
-void TweetCommand::execute() {
+void GroupTweetCommand::execute() {
     std::string username = this->payload.substr(0, this->payload.find(","));
     std::string auxSession = this->payload.substr(this->payload.find(",") + 1);
     std::string session = auxSession.substr(0, auxSession.find(","));
@@ -19,28 +19,16 @@ void TweetCommand::execute() {
     std::string message = auxMessage.substr(0, auxMessage.find_last_of(","));
     
     if (!this->sessions.getAccounts().accountExists(username)) {
-        if (this->connectable->sendMessage("perfil nao existe") < 0) {
-            perror("sendto()");
-            exit(1);
-        }
         std::cout << "Account @" << username << " does not exist. Aborting operation.\n";
         return;
     }
 
     if (!this->sessions.hasSession(username, std::stoul(session))) {
-        if (this->connectable->sendMessage("sessao invalida") < 0) {
-            perror("sendto()");
-            exit(1);
-        }
         std::cout << "Invalid session [" << session << "] for account @" << username << ". Aborting operation.\n";
         return;
     }
 
     if (message.length() > 128) {
-        if (this->connectable->sendMessage("mensagem excede 128 caracteres") < 0) {
-            perror("sendto()");
-            exit(1);
-        }
         std::cout << "Tweet message exceeds 128 characters. Abording operation.\n";
         return;
     }
@@ -69,13 +57,8 @@ void TweetCommand::execute() {
         }
     }
     std::cout << std::endl;
-
-    if (this->connectable->sendMessage("tweet," + username + "," + session + "," + message + ",") < 0) {
-        perror("sendto()");
-        exit(1);
-    }
 }
 
-std::string TweetCommand::name() const {
-    return "Tweets message";
+std::string GroupTweetCommand::name() const {
+    return "Executes replicated tweet generation";
 }

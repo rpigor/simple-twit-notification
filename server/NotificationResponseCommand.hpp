@@ -13,7 +13,7 @@ private:
 
 public:
     NotificationResponseCommand(Sessions&, std::map<std::string, std::vector<Notification>>&);
-    NotificationResponseCommand(Connection, Sessions&, std::map<std::string, std::vector<Notification>>&, const std::string&);
+    NotificationResponseCommand(Connectable*, Sessions&, std::map<std::string, std::vector<Notification>>&, const std::string&);
     void execute() override;
     std::string name() const override;
 };

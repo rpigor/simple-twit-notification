@@ -9,8 +9,8 @@ NotificationResponseCommand::NotificationResponseCommand(Sessions& sessions, std
 
 }
 
-NotificationResponseCommand::NotificationResponseCommand(Connection connection, Sessions& sessions, std::map<std::string, std::vector<Notification>>& notifications, const std::string& payload)
-    : Command(connection, sessions, payload), notifications(notifications) {
+NotificationResponseCommand::NotificationResponseCommand(Connectable* connectable, Sessions& sessions, std::map<std::string, std::vector<Notification>>& notifications, const std::string& payload)
+    : Command(connectable, sessions, payload), notifications(notifications) {
 
 }
 
