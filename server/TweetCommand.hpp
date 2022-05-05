@@ -11,6 +11,8 @@
 
 class TweetCommand : public Command {
 private:
+    static constexpr int CHAR_LIMIT = 128;
+
     std::vector<Tweet>& tweets;
     std::map<std::string, std::vector<Notification>>& notifications;
 

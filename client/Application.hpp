@@ -6,6 +6,8 @@
 
 class Application {
 private:
+    static constexpr int CHAR_LIMIT = 128;
+
     static void handleCommands(Client& client, const std::string& profile, const std::string& session);
     static void handleNotifications(Client& client);
     static void printCommands();
