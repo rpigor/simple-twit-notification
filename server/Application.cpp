@@ -3,6 +3,7 @@
 #include "Account.hpp"
 #include "Sessions.hpp"
 #include "Tweet.hpp"
+#include "Messages.hpp"
 #include "SessionCommand.hpp"
 #include "FollowCommand.hpp"
 #include "TweetCommand.hpp"
@@ -38,16 +39,16 @@ void Application::run() {
 	GroupSessionCommand groupSessionCommand(sessions);
 	GroupFollowCommand groupFollowCommand(sessions);
 	GroupTweetCommand groupTweetCommand(sessions, tweets, notifications);
-	groupCommands["sessao"] = &groupSessionCommand;
-	groupCommands["seguir"] = &groupFollowCommand;
-	groupCommands["tweet"] = &groupTweetCommand;
+	groupCommands[Messages::SESSION_COMMAND] = &groupSessionCommand;
+	groupCommands[Messages::FOLLOW_COMMAND] = &groupFollowCommand;
+	groupCommands[Messages::TWEET_COMMAND] = &groupTweetCommand;
 
 	// creates group socket and bind to port
 	Group group(GROUP_IP, GROUP_PORT);
 	std::cout << "Listening to port " << GROUP_PORT << " on group IP " << GROUP_IP << "..." << std::endl;
 
 	// asks for leader
-	group.sendMessage("group,");
+	group.sendMessage(Messages::ASK_FOR_LEADER_COMMAND + ",");
 	group.receiveMessage();
 	std::string groupMessage = group.getMessage();
 
@@ -56,7 +57,7 @@ void Application::run() {
 	if (!groupMessage.empty()) {
 		// there's already a leader: I'm a secondary server
 		std::string auxServerId, serverIdStr, auxLeaderId;
-		if (groupMessage.substr(0, groupMessage.find(",")) == "leader") {
+		if (groupMessage.substr(0, groupMessage.find(",")) == Messages::LEADER_RESPONSE_COMMAND) {
 			auxServerId = groupMessage.substr(groupMessage.find(",") + 1);
 			auxLeaderId = auxServerId.substr(auxServerId.find(",") + 1);
 			leaderId = std::stoi(auxLeaderId.substr(0, auxLeaderId.find(",")));
@@ -68,7 +69,7 @@ void Application::run() {
 		group.receiveMessage();
 		groupMessage = group.getMessage();
 		while (!groupMessage.empty()) {
-			if (groupMessage.substr(0, groupMessage.find(",")) != "leader") {
+			if (groupMessage.substr(0, groupMessage.find(",")) != Messages::LEADER_RESPONSE_COMMAND) {
 				group.receiveMessage();
 				groupMessage = group.getMessage();
 				continue;
@@ -106,10 +107,10 @@ void Application::run() {
 	FollowCommand followCommand(sessions);
 	TweetCommand tweetCommand(sessions, tweets, notifications);
 	NotificationResponseCommand notificationResponseCommand(sessions, notifications);
-	commands["sessao"] = &sessionCommand;
-	commands["seguir"] = &followCommand;
-	commands["tweet"] = &tweetCommand;
-	commands["notify"] = &notificationResponseCommand;
+	commands[Messages::SESSION_COMMAND] = &sessionCommand;
+	commands[Messages::FOLLOW_COMMAND] = &followCommand;
+	commands[Messages::TWEET_COMMAND] = &tweetCommand;
+	commands[Messages::NOTIFICATION_RESPONSE_COMMAND] = &notificationResponseCommand;
 
 	// create server socket and bind to port
 	Server server(SERVER_PORT);
@@ -149,13 +150,13 @@ void Application::handleGroup(Group& group, std::map<std::string, Command*> comm
 		std::string commandStr = message.substr(0, message.find(","));
 		std::string payloadStr = message.substr(message.find(",") + 1);
 
-		if (commandStr == "group") {
+		if (commandStr == Messages::ASK_FOR_LEADER_COMMAND) {
 			std::cout << "Answered election request from group." << std::endl;
 			std::string groupResponse = "leader," + std::to_string(serverId) + "," + std::to_string(leaderId) + ",";
 			group.sendMessage(groupResponse);
 			continue;
 		}
-		else if (commandStr == "leader") {
+		else if (commandStr == Messages::LEADER_RESPONSE_COMMAND) {
 			std::string auxGroupLeader = payloadStr.substr(payloadStr.find(",") + 1);
 			leaderId = std::stoi(auxGroupLeader.substr(0, auxGroupLeader.find(",")));
 			continue;
@@ -212,7 +213,7 @@ void Application::handleNotifications(Sessions& sessions, std::map<std::string, 
 
 			// consumes pending notification for client
 			for (auto it = entry.second.begin(); it < entry.second.end(); ++it) {
-				std::string notifyMessage = "notify," + account.getUsername() + "," + std::to_string(it->getTweet().getEpoch()) + "," + it->getAuthor() + "," + std::to_string(it->getTweet().getMessage().length()) + "," + it->getTweet().getMessage() + ",";
+				std::string notifyMessage = Messages::NOTIFICATION_RESPONSE_COMMAND + "," + account.getUsername() + "," + std::to_string(it->getTweet().getEpoch()) + "," + it->getAuthor() + "," + std::to_string(it->getTweet().getMessage().length()) + "," + it->getTweet().getMessage() + ",";
 				std::pair<Session, Session> activeSessions = sessions.getActiveSessions(account.getUsername());
 
 				if (activeSessions.first.getSessionId() == 0 && activeSessions.second.getSessionId() == 0) {

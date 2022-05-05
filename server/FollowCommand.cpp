@@ -1,4 +1,5 @@
 #include "FollowCommand.hpp"
+#include "Messages.hpp"
 #include <iostream>
 #include <algorithm>
 
@@ -20,7 +21,7 @@ void FollowCommand::execute() {
     std::string userToFollow = auxUserToFollow.substr(0, auxUserToFollow.find(","));
 
     if (!this->sessions.getAccounts().accountExists(username)) {
-        if (this->connectable->sendMessage("perfil nao existe") < 0) {
+        if (this->connectable->sendMessage(Messages::PROFILE_NOT_FOUND) < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -29,7 +30,7 @@ void FollowCommand::execute() {
     }
 
     if (!this->sessions.getAccounts().accountExists(userToFollow)) {
-        if (this->connectable->sendMessage("perfil para seguir nao existe") < 0) {
+        if (this->connectable->sendMessage(Messages::PROFILE_TO_FOLLOW_NOT_FOUND) < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -38,7 +39,7 @@ void FollowCommand::execute() {
     }
 
     if (!this->sessions.hasSession(username, std::stoul(session))) {
-        if (this->connectable->sendMessage("sessao invalida") < 0) {
+        if (this->connectable->sendMessage(Messages::INVALID_SESSION) < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -47,7 +48,7 @@ void FollowCommand::execute() {
     }
 
     if (userToFollow == username) {
-        if (this->connectable->sendMessage("perfil nao pode seguir a si mesmo") < 0) {
+        if (this->connectable->sendMessage(Messages::PROFILE_CANNOT_FOLLOW_ITSELF) < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -85,7 +86,7 @@ void FollowCommand::execute() {
     }
     std::cout << std::endl;
 
-    if (this->connectable->sendMessage("seguir," + username + "," + session + "," + userToFollow + ",") < 0) {
+    if (this->connectable->sendMessage(Messages::FOLLOW_COMMAND + "," + username + "," + session + "," + userToFollow + ",") < 0) {
         perror("sendto()");
         exit(1);
     }

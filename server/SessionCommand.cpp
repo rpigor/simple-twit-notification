@@ -1,4 +1,5 @@
 #include "SessionCommand.hpp"
+#include "Messages.hpp"
 #include <iostream>
 
 SessionCommand::SessionCommand(Sessions& sessions)
@@ -18,7 +19,7 @@ void SessionCommand::execute() {
 
     std::cout << "Session [" << sessionId << "] generated to account @" << username << ".\n";
 
-    std::string sessionMsg = "sessao," + std::to_string(sessionId) + ",";
+    std::string sessionMsg = Messages::SESSION_COMMAND + "," + std::to_string(sessionId) + ",";
     this->connectable->sendMessage(sessionMsg);
 }
 

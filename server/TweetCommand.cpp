@@ -1,4 +1,5 @@
 #include "TweetCommand.hpp"
+#include "Messages.hpp"
 #include <iostream>
 
 TweetCommand::TweetCommand(Sessions& sessions, std::vector<Tweet>& tweets, std::map<std::string, std::vector<Notification>>& notifications)
@@ -19,7 +20,7 @@ void TweetCommand::execute() {
     std::string message = auxMessage.substr(0, auxMessage.find_last_of(","));
     
     if (!this->sessions.getAccounts().accountExists(username)) {
-        if (this->connectable->sendMessage("perfil nao existe") < 0) {
+        if (this->connectable->sendMessage(Messages::PROFILE_NOT_FOUND) < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -28,7 +29,7 @@ void TweetCommand::execute() {
     }
 
     if (!this->sessions.hasSession(username, std::stoul(session))) {
-        if (this->connectable->sendMessage("sessao invalida") < 0) {
+        if (this->connectable->sendMessage(Messages::INVALID_SESSION) < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -37,7 +38,7 @@ void TweetCommand::execute() {
     }
 
     if (message.length() > 128) {
-        if (this->connectable->sendMessage("mensagem excede 128 caracteres") < 0) {
+        if (this->connectable->sendMessage(Messages::TWEET_EXCEEDS_CHAR_LIMIT) < 0) {
             perror("sendto()");
             exit(1);
         }
@@ -70,7 +71,7 @@ void TweetCommand::execute() {
     }
     std::cout << std::endl;
 
-    if (this->connectable->sendMessage("tweet," + username + "," + session + "," + message + ",") < 0) {
+    if (this->connectable->sendMessage(Messages::TWEET_COMMAND + "," + username + "," + session + "," + message + ",") < 0) {
         perror("sendto()");
         exit(1);
     }
