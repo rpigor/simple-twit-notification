@@ -40,7 +40,8 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	Application::run(profile, ip, port);
+	Application::setProfile(profile);
+	Application::run(ip, port);
 	
 	return 0;
 }

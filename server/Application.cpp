@@ -5,6 +5,7 @@
 #include "Tweet.hpp"
 #include "Messages.hpp"
 #include "SessionCommand.hpp"
+#include "CloseSessionCommand.hpp"
 #include "FollowCommand.hpp"
 #include "TweetCommand.hpp"
 #include "NotificationResponseCommand.hpp"
@@ -37,9 +38,11 @@ void Application::run() {
 	// initializes group commands
 	std::map<std::string, Command*> groupCommands;
 	GroupSessionCommand groupSessionCommand(sessions);
+	CloseSessionCommand groupCloseSessionCommand(sessions);
 	GroupFollowCommand groupFollowCommand(sessions);
 	GroupTweetCommand groupTweetCommand(sessions, tweets, notifications);
 	groupCommands[Messages::SESSION_COMMAND] = &groupSessionCommand;
+	groupCommands[Messages::CLOSE_SESSION_COMMAND] = &groupCloseSessionCommand;
 	groupCommands[Messages::FOLLOW_COMMAND] = &groupFollowCommand;
 	groupCommands[Messages::TWEET_COMMAND] = &groupTweetCommand;
 
@@ -104,10 +107,12 @@ void Application::run() {
 	// initialize server commands
 	std::map<std::string, Command*> commands;
 	SessionCommand sessionCommand(sessions);
+	CloseSessionCommand closeSessionCommand(sessions);
 	FollowCommand followCommand(sessions);
 	TweetCommand tweetCommand(sessions, tweets, notifications);
 	NotificationResponseCommand notificationResponseCommand(sessions, notifications);
 	commands[Messages::SESSION_COMMAND] = &sessionCommand;
+	commands[Messages::CLOSE_SESSION_COMMAND] = &closeSessionCommand;
 	commands[Messages::FOLLOW_COMMAND] = &followCommand;
 	commands[Messages::TWEET_COMMAND] = &tweetCommand;
 	commands[Messages::NOTIFICATION_RESPONSE_COMMAND] = &notificationResponseCommand;
@@ -152,13 +157,17 @@ void Application::handleGroup(Group& group, std::map<std::string, Command*> comm
 
 		if (commandStr == Messages::ASK_FOR_LEADER_COMMAND) {
 			std::cout << "Answered election request from group." << std::endl;
-			std::string groupResponse = "leader," + std::to_string(serverId) + "," + std::to_string(leaderId) + ",";
+			std::string groupResponse = Messages::LEADER_RESPONSE_COMMAND + "," + std::to_string(serverId) + "," + std::to_string(leaderId) + ",";
 			group.sendMessage(groupResponse);
 			continue;
 		}
 		else if (commandStr == Messages::LEADER_RESPONSE_COMMAND) {
+			int senderId = std::stoi(payloadStr.substr(0, payloadStr.find(",")));
 			std::string auxGroupLeader = payloadStr.substr(payloadStr.find(",") + 1);
 			leaderId = std::stoi(auxGroupLeader.substr(0, auxGroupLeader.find(",")));
+
+			// std::cout << message << std::endl;
+
 			continue;
 		}
 
@@ -168,7 +177,7 @@ void Application::handleGroup(Group& group, std::map<std::string, Command*> comm
 			commands.at(commandStr)->setPayload(payloadStr);
 
 			{
-				std::lock_guard<std::mutex> commandGuard(mutex);
+				std::lock_guard<std::mutex> commandGuard(mutex); // synchronize access to resources
 				commands.at(commandStr)->execute();
 			}
 		}
@@ -192,7 +201,7 @@ void Application::handleRequest(Connection conn, Group& group, std::map<std::str
 		}
 
 		{ 
-			std::lock_guard<std::mutex> connectionGuard(connectionMutex);
+			std::lock_guard<std::mutex> connectionGuard(connectionMutex); // synchronize access to connection
 			group.sendMessage(message);
 		}
 	}
@@ -210,16 +219,15 @@ void Application::handleNotifications(Sessions& sessions, std::map<std::string, 
 
 		for (auto& entry : notifications) {
 			Account account = *accounts.findAccount(entry.first);
+			std::pair<Session, Session> activeSessions = sessions.getActiveSessions(account.getUsername());
+
+			if (activeSessions.first.getSessionId() == 0 && activeSessions.second.getSessionId() == 0) {
+				continue;
+			}
 
 			// consumes pending notification for client
 			for (auto it = entry.second.begin(); it < entry.second.end(); ++it) {
 				std::string notifyMessage = Messages::NOTIFICATION_RESPONSE_COMMAND + "," + account.getUsername() + "," + std::to_string(it->getTweet().getEpoch()) + "," + it->getAuthor() + "," + std::to_string(it->getTweet().getMessage().length()) + "," + it->getTweet().getMessage() + ",";
-				std::pair<Session, Session> activeSessions = sessions.getActiveSessions(account.getUsername());
-
-				if (activeSessions.first.getSessionId() == 0 && activeSessions.second.getSessionId() == 0) {
-					continue;
-				}
-
 				if (activeSessions.first.getSessionId() != 0) {
 					if (activeSessions.first.getClientConnection().sendMessage(notifyMessage) < 0) {
 						continue;

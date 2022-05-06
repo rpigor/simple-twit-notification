@@ -47,7 +47,7 @@ void Sessions::deleteSession(const std::string& username, unsigned long session)
     if (this->sessions.at(username).first.getSessionId() == session) {
         this->sessions[username].first.setSessionId(0);
     }
-    else {
+    else if (this->sessions.at(username).second.getSessionId() == session) {
         this->sessions[username].second.setSessionId(0);
     }
 }

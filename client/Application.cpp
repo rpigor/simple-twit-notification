@@ -2,27 +2,38 @@
 #include "Client.hpp"
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include <thread>
 #include <ctime>
+#include <csignal>
 
-void Application::run(const std::string& profile, const std::string& ip, unsigned short port) {
-    Client client(ip, port);
+std::string Application::profile;
 
-    if (client.sendMessage("sessao," + profile + ",") < 0) {
+unsigned long Application::session;
+
+Client* Application::client;
+
+void Application::run(const std::string& ip, unsigned short port) {
+    Client auxClient(ip, port);
+    client = &auxClient;
+
+    initializeExitSignals();
+
+    if (client->sendMessage("sessao," + profile + ",") < 0) {
         perror("a");
         return;
     }
 
-    if (client.receiveMessage() < 0) {
+    if (client->receiveMessage() < 0) {
         perror("b");
         return;
     }
 
-    std::string auxSession = client.getMessage().substr(client.getMessage().find(",") + 1);
-    std::string session = auxSession.substr(0, auxSession.find(","));
+    std::string auxSession = client->getMessage().substr(client->getMessage().find(",") + 1);
+    session = std::stoul(auxSession.substr(0, auxSession.find(",")));
 
     try {
-        if (std::stoul(session) == 0) {
+        if (session == 0) {
             std::cout << "[ERROR] Invalid profile. Could not log in." << std::endl;
             exit(1);
         }
@@ -35,14 +46,18 @@ void Application::run(const std::string& profile, const std::string& ip, unsigne
         return;
     }
 
-    std::thread notificationsThread(handleNotifications, std::ref(client));
+    std::thread notificationsThread(handleNotifications);
 
-    handleCommands(client, profile, session);
+    handleCommands();
 
     notificationsThread.join();
 }
 
-void Application::handleCommands(Client& client, const std::string& profile, const std::string& session) {
+void Application::setProfile(const std::string& profile) {
+    Application::profile = profile;
+}
+
+void Application::handleCommands() {
     std::string message;
 
     while (true) {
@@ -52,6 +67,7 @@ void Application::handleCommands(Client& client, const std::string& profile, con
         std::string commandStr = message.substr(0, message.find(" "));
         std::string payloadStr = message.substr(message.find(" ") + 1);
 
+        std::transform(commandStr.begin(), commandStr.end(), commandStr.begin(), ::toupper);
         if (commandStr == "FOLLOW") {
             if (payloadStr.at(0) != '@') {
                 std::cout << "[ERROR] Invalid profile syntax. Profile must begin with '@'." << std::endl;
@@ -64,18 +80,18 @@ void Application::handleCommands(Client& client, const std::string& profile, con
                 continue;
             }
 
-            std::string serverMessage = "seguir,"+ profile + "," + session + "," + payloadStr.substr(1) + ",";
-            if (client.sendMessage(serverMessage) < 0) {
+            std::string serverMessage = "seguir,"+ profile + "," + std::to_string(session) + "," + payloadStr.substr(1) + ",";
+            if (client->sendMessage(serverMessage) < 0) {
                 perror("a");
                 continue;
             }
 
-            if (client.receiveMessage() < 0) {
+            if (client->receiveMessage() < 0) {
                 perror("b");
                 continue;
             }
 
-            std::string serverResponse = client.getMessage();
+            std::string serverResponse = client->getMessage();
             if (serverResponse.find("sessao invalida") != std::string::npos) {
                 std::cout << "[ERROR] Invalid session. Try to log in again." << std::endl;
                 exit(1);
@@ -101,18 +117,18 @@ void Application::handleCommands(Client& client, const std::string& profile, con
                 continue;
             }
 
-            std::string serverMessage = "tweet," + profile + "," + session + "," + payloadStr + ",";
-            if (client.sendMessage(serverMessage) < 0) {
+            std::string serverMessage = "tweet," + profile + "," + std::to_string(session) + "," + payloadStr + ",";
+            if (client->sendMessage(serverMessage) < 0) {
                 perror("a");
                 continue;
             }
 
-            if (client.receiveMessage() < 0) {
+            if (client->receiveMessage() < 0) {
                 perror("b");
                 continue;
             }
 
-            std::string serverResponse = client.getMessage();
+            std::string serverResponse = client->getMessage();
             if (serverResponse.find("sessao invalida") != std::string::npos) {
                 std::cout << "[ERROR] Invalid session. Try to log in again." << std::endl;
                 exit(1);
@@ -128,12 +144,11 @@ void Application::handleCommands(Client& client, const std::string& profile, con
 
             std::cout << "[SUCCESS] You tweeted '" << payloadStr << "'!" << std::endl;
         }
-        else if (message == "HELP") {
+        else if (commandStr == "HELP") {
             printCommands();
         }
-        else if (message == "EXIT") {
-            std::cout << "[INFO] Exiting..." << std::endl;
-            exit(0);
+        else if (commandStr == "EXIT") {
+            sendExitMessageAndExit(0); // useless parameter (only in this case)
         }
         else {
             std::cout << "[ERROR] Invalid command." << std::endl;
@@ -142,15 +157,15 @@ void Application::handleCommands(Client& client, const std::string& profile, con
     }  
 }
 
-void Application::handleNotifications(Client& client) {
+void Application::handleNotifications() {
     while (true) {
         //std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-        if (client.nonBlockingReceiveMessage() < 0) {
+        if (client->nonBlockingReceiveMessage() < 0) {
             continue;
         }
 
-        std::string message = client.getMessage();
+        std::string message = client->getMessage();
         std::string commandStr = message.substr(0, message.find(","));
 
         if (commandStr != "notify") {
@@ -177,12 +192,25 @@ void Application::handleNotifications(Client& client) {
         std::string notifyMessage = "notify," + username + "," + std::to_string(timestamp) + "," + author + "," + std::to_string(len) + "," + tweet + ",";
         bool sent = false;
         do {
-            sent = client.sendMessage(notifyMessage) >= 0;
+            sent = client->sendMessage(notifyMessage) >= 0;
         } while (!sent);
 
         std::cout << ">";
         fflush(stdout);
     }
+}
+
+void Application::initializeExitSignals() {
+    std::signal(SIGINT, sendExitMessageAndExit);
+	std::signal(SIGABRT, sendExitMessageAndExit);
+	std::signal(SIGTERM, sendExitMessageAndExit);
+	std::signal(SIGTSTP, sendExitMessageAndExit);
+}
+
+void Application::sendExitMessageAndExit(int i) {
+    std::cout << std::endl << "[INFO] Exiting..." << std::endl;
+    client->sendMessage("sair," + profile + "," + std::to_string(session) + ",");
+    exit(0);
 }
 
 void Application::printCommands() {

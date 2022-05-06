@@ -4,6 +4,7 @@
 
 namespace Messages {
     const std::string SESSION_COMMAND = "sessao";
+    const std::string CLOSE_SESSION_COMMAND = "sair";
     const std::string FOLLOW_COMMAND = "seguir";
     const std::string TWEET_COMMAND = "tweet";
     const std::string NOTIFICATION_RESPONSE_COMMAND = "notify";
