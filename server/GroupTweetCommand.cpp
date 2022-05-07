@@ -1,5 +1,6 @@
 #include "GroupTweetCommand.hpp"
 #include <iostream>
+#include <thread>
 
 GroupTweetCommand::GroupTweetCommand(Sessions& sessions, std::vector<Tweet>& tweets, std::map<std::string, std::vector<Notification>>& notifications)
     : Command(sessions), tweets(tweets), notifications(notifications) {
@@ -28,8 +29,8 @@ void GroupTweetCommand::execute() {
         return;
     }
 
-    if (message.length() > 128) {
-        std::cout << "Tweet message exceeds 128 characters. Abording operation.\n";
+    if (message.length() > CHAR_LIMIT) {
+        std::cout << "Tweet message exceeds " << CHAR_LIMIT << " characters. Abording operation.\n";
         return;
     }
 

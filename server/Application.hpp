@@ -22,12 +22,14 @@ private:
     static Accounts accounts;
     static int leaderId;
     static int serverId;
+    static int serverCount;
     static std::mutex mutex;
     static std::mutex connectionMutex;
 
-    static void handleGroup(Group&, std::map<std::string, Command*>);
+    static void handleGroup(Group&, std::map<std::string, Command*>, Sessions&, std::map<std::string, std::vector<Notification>>&);
     static void handleRequest(Connection, Group&, std::map<std::string, Command*>, std::string);
     static void handleNotifications(Sessions&, std::map<std::string, std::vector<Notification>>&);
+    static void checkNotificationFailure(Sessions&, std::map<std::string, std::vector<Notification>>&);
     static void handleAccountsInitialization();
     static void backupAccounts(int i);
     static void recoverAccounts();

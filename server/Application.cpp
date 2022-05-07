@@ -15,6 +15,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <unordered_set>
 #include <thread>
 #include <chrono>
 #include <fstream>
@@ -24,6 +25,7 @@ Accounts Application::accounts;
 
 int Application::leaderId;
 int Application::serverId;
+int Application::serverCount = 1;
 
 std::mutex Application::mutex;
 std::mutex Application::connectionMutex;
@@ -41,10 +43,12 @@ void Application::run() {
 	CloseSessionCommand groupCloseSessionCommand(sessions);
 	GroupFollowCommand groupFollowCommand(sessions);
 	GroupTweetCommand groupTweetCommand(sessions, tweets, notifications);
+	NotificationResponseCommand groupNotificationResponseCommand(sessions, notifications);
 	groupCommands[Messages::SESSION_COMMAND] = &groupSessionCommand;
 	groupCommands[Messages::CLOSE_SESSION_COMMAND] = &groupCloseSessionCommand;
 	groupCommands[Messages::FOLLOW_COMMAND] = &groupFollowCommand;
 	groupCommands[Messages::TWEET_COMMAND] = &groupTweetCommand;
+	groupCommands[Messages::NOTIFICATION_RESPONSE_COMMAND] = &groupNotificationResponseCommand;
 
 	// creates group socket and bind to port
 	Group group(GROUP_IP, GROUP_PORT);
@@ -55,7 +59,7 @@ void Application::run() {
 	group.receiveMessage();
 	std::string groupMessage = group.getMessage();
 
-	std::thread groupThread(handleGroup, std::ref(group), groupCommands);
+	std::thread groupThread(handleGroup, std::ref(group), groupCommands, std::ref(sessions), std::ref(notifications));
 
 	if (!groupMessage.empty()) {
 		// there's already a leader: I'm a secondary server
@@ -91,7 +95,19 @@ void Application::run() {
 
 		std::cout << "I'm not the leader :(. " << std::endl;
 		std::cout << "The leader's id is: " << leaderId << std::endl;
+
+		// send message to group confirming the id
+		// if rejected by the group, adjusts the id
+		group.sendMessage(Messages::CONFIRM_ID_COMMAND + "," + std::to_string(serverId) + ",");
+		group.receiveMessage();
+		if (!group.getMessage().empty() && group.getMessage().substr(0, group.getMessage().find(",")) == Messages::CONFIRM_ID_COMMAND) {
+			std::cout << "Adjusting serverId..." << std::endl;
+			++serverId;
+		}
 		std::cout << "My id: " << serverId << std::endl;
+
+		serverCount = serverId + 1;
+		std::cout << "Number of servers (incluing coordinator): " << serverCount << std::endl;
 
 		groupThread.join();
 
@@ -140,36 +156,64 @@ void Application::run() {
 	groupThread.join();
 }
 
-void Application::handleGroup(Group& group, std::map<std::string, Command*> commands) {
+void Application::handleGroup(Group& group, std::map<std::string, Command*> commands, Sessions& sessions, std::map<std::string, std::vector<Notification>>& notifications) {
+	std::vector<std::thread> checkThreads;
+	
 	while (true) {
+		std::string commandStr, payloadStr;
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		std::lock_guard<std::mutex> connectionGuard(connectionMutex);
 
-		group.receiveMessage();
-		std::string message = group.getMessage();
+		{
+			std::lock_guard<std::mutex> connectionGuard(connectionMutex);
 
-		if (message.empty()) {
+			group.receiveMessage();
+			std::string message = group.getMessage();
+
+			if (message.empty()) {
+				continue;
+			}
+
+			commandStr = message.substr(0, message.find(","));
+			payloadStr = message.substr(message.find(",") + 1);
+
+			if (commandStr == Messages::ASK_FOR_LEADER_COMMAND) {
+				std::string groupResponse = Messages::LEADER_RESPONSE_COMMAND + "," + std::to_string(serverId) + "," + std::to_string(leaderId) + ",";
+				group.sendMessage(groupResponse);
+				++serverCount;
+
+				std::cout << "Answered election request from group." << std::endl;
+				std::cout << "Number of servers: " << serverCount << std::endl;
+				continue;
+			}
+			else if (commandStr == Messages::CONFIRM_ID_COMMAND) {
+				int id = std::stoi(payloadStr.substr(0, payloadStr.find(",")));
+				if (id == serverId) {
+					std::cout << "Server tried initializing with used id. Warning..." << std::endl;
+					group.sendMessage(Messages::CONFIRM_ID_COMMAND + "," + std::to_string(serverId) + ",");
+				}
+				continue;
+			}
+			else if (commandStr == Messages::LEADER_RESPONSE_COMMAND) {
+				int senderId = std::stoi(payloadStr.substr(0, payloadStr.find(",")));
+				std::string auxGroupLeader = payloadStr.substr(payloadStr.find(",") + 1);
+				leaderId = std::stoi(auxGroupLeader.substr(0, auxGroupLeader.find(",")));
+				continue;
+			}
+			/*else if (commandStr == Messages::REPLICATION_RESPONSE_COMMAND) {
+				continue;
+			}*/
+		}
+
+		// leader shouldn't execute replicated commands
+		if (leaderId == serverId) {
 			continue;
 		}
 
-		std::string commandStr = message.substr(0, message.find(","));
-		std::string payloadStr = message.substr(message.find(",") + 1);
-
-		if (commandStr == Messages::ASK_FOR_LEADER_COMMAND) {
-			std::cout << "Answered election request from group." << std::endl;
-			std::string groupResponse = Messages::LEADER_RESPONSE_COMMAND + "," + std::to_string(serverId) + "," + std::to_string(leaderId) + ",";
-			group.sendMessage(groupResponse);
-			continue;
-		}
-		else if (commandStr == Messages::LEADER_RESPONSE_COMMAND) {
-			int senderId = std::stoi(payloadStr.substr(0, payloadStr.find(",")));
-			std::string auxGroupLeader = payloadStr.substr(payloadStr.find(",") + 1);
-			leaderId = std::stoi(auxGroupLeader.substr(0, auxGroupLeader.find(",")));
-
-			// std::cout << message << std::endl;
-
-			continue;
-		}
+		/*
+		// answers primary server
+		std::string replicationResponse = Messages::REPLICATION_RESPONSE_COMMAND + "," + std::to_string(serverId) + "," + message;
+		group.sendMessage(replicationResponse);
+		*/
 
 		try {
 			Connection auxConnection = Connection();
@@ -180,10 +224,18 @@ void Application::handleGroup(Group& group, std::map<std::string, Command*> comm
 				std::lock_guard<std::mutex> commandGuard(mutex); // synchronize access to resources
 				commands.at(commandStr)->execute();
 			}
+
+			if (commandStr == Messages::TWEET_COMMAND) {
+				checkThreads.push_back(std::thread(checkNotificationFailure, std::ref(sessions), std::ref(notifications)));
+			}
 		}
 		catch(const std::out_of_range& e) {
-			std::cout << "Invalid group command." << std::endl;
+			std::cout << "Invalid group command: " << commandStr << std::endl;
 		}
+	}
+
+	for (auto& t: checkThreads) {
+		t.join();
 	}
 }
 
@@ -196,17 +248,40 @@ void Application::handleRequest(Connection conn, Group& group, std::map<std::str
 		commands.at(commandStr)->setPayload(payloadStr);
 
 		{ 
+			std::lock_guard<std::mutex> connectionGuard(connectionMutex); // synchronize access to connection
+			group.sendMessage(message); // replicate message to secondary servers
+		}
+
+		/*
+		// count replication responses
+		std::unordered_set<int> serverIds;
+		for (int i = 0; i < 2*serverCount; ++i) {
+			group.receiveMessage();
+			std::string replicationResponse = group.getMessage();
+			if (!replicationResponse.empty() && replicationResponse.substr(0, replicationResponse.find(",")) == Messages::REPLICATION_RESPONSE_COMMAND) {
+				std::string replicationPayload = replicationResponse.substr(replicationResponse.find(",") + 1);
+				std::string auxMessage = replicationPayload.substr(replicationPayload.find(",") + 1);
+				if (auxMessage.find(message) != std::string::npos) {
+					serverIds.insert(std::stoi(replicationPayload.substr(0, replicationPayload.find(","))));
+				}
+			}
+		}
+
+		if (serverIds.size() != static_cast<size_t>(serverCount - 1)) {
+			for (auto i : serverIds) {
+				std::cout << i << " ";
+			}
+			std::cout << std::endl << "Replication error! Check secondary servers." << std::endl;
+		}
+		*/
+
+		{ 
 			std::lock_guard<std::mutex> commandGuard(mutex); // synchronize access to resources
 			commands.at(commandStr)->execute();
 		}
-
-		{ 
-			std::lock_guard<std::mutex> connectionGuard(connectionMutex); // synchronize access to connection
-			group.sendMessage(message);
-		}
 	}
 	catch(const std::out_of_range& e) {
-		std::cout << "Invalid command." << std::endl;
+		std::cout << "Invalid command: " << commandStr << std::endl;
 	}
 
 	std::cout << std::endl;
@@ -214,7 +289,7 @@ void Application::handleRequest(Connection conn, Group& group, std::map<std::str
 
 void Application::handleNotifications(Sessions& sessions, std::map<std::string, std::vector<Notification>>& notifications) {
 	while (true) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(750));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 		std::lock_guard<std::mutex> notificationGuard(mutex);
 
 		for (auto& entry : notifications) {
@@ -242,6 +317,28 @@ void Application::handleNotifications(Sessions& sessions, std::map<std::string, 
 			}
 		}
 	}
+}
+
+void Application::checkNotificationFailure(Sessions& sessions, std::map<std::string, std::vector<Notification>>& notifications) {
+	std::this_thread::sleep_for(std::chrono::milliseconds(3500));
+	std::lock_guard<std::mutex> notificationGuard(mutex);
+
+	for (auto& entry : notifications) {
+		Account account = *(sessions.getAccounts().findAccount(entry.first));
+		std::pair<Session, Session> activeSessions = sessions.getActiveSessions(account.getUsername());
+
+		if (activeSessions.first.getSessionId() == 0 && activeSessions.second.getSessionId() == 0) {
+			continue;
+		}
+		
+		// checks if there is any deliverable notification
+		if (!entry.second.empty()) {
+			std::cout << "Possible coordinator failure! Elect a new coordinator ASAP!" << std::endl;
+			return;
+		}
+	}
+
+	std::cout << "No coordination problem." << std::endl;
 }
 
 void Application::handleAccountsInitialization() {

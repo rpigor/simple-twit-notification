@@ -11,6 +11,8 @@ namespace Messages {
 
     const std::string ASK_FOR_LEADER_COMMAND = "group";
     const std::string LEADER_RESPONSE_COMMAND = "leader";
+    const std::string CONFIRM_ID_COMMAND = "confirm";
+    // const std::string REPLICATION_RESPONSE_COMMAND = "replicated";
 
     const std::string INVALID_SESSION = "sessao invalida";
     const std::string PROFILE_NOT_FOUND = "perfil nao existe";
