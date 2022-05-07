@@ -66,13 +66,13 @@ void Application::run() {
 		std::string auxServerId, serverIdStr, auxLeaderId;
 		if (groupMessage.substr(0, groupMessage.find(",")) == Messages::LEADER_RESPONSE_COMMAND) {
 			auxServerId = groupMessage.substr(groupMessage.find(",") + 1);
+			serverId = std::stoi(auxServerId.substr(0, auxServerId.find(",")));
 			auxLeaderId = auxServerId.substr(auxServerId.find(",") + 1);
 			leaderId = std::stoi(auxLeaderId.substr(0, auxLeaderId.find(",")));
 		}
 
 		// tries to receive leader message from other servers
 		// to calculate this server's id
-		serverId = 0;
 		group.receiveMessage();
 		groupMessage = group.getMessage();
 		while (!groupMessage.empty()) {
